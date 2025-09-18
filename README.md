@@ -204,7 +204,7 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para
   <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Escudo_de_la_Universidad_del_Valle.svg/200px-Escudo_de_la_Universidad_del_Valle.svg.png" alt="Universidad del Valle" width="100">
 </div>
 
-**CrushUV** es un proyecto estudiantil desarrollado para la comunidad de la Universidad del Valle, ubicada en Cali, Colombia. La aplicación busca fortalecer los vínculos sociales dentro del campus y promover conexiones significativas entre estudiantes.
+**CrushUV** es un proyecto estudiantil desarrollado para la comunidad de la Universidad del Valle, ubicada en Tulua, Colombia. La aplicación busca fortalecer los vínculos sociales dentro del campus y promover conexiones significativas entre estudiantes.
 
 ## 📞 Soporte
 

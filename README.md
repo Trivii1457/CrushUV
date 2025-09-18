@@ -222,5 +222,5 @@ Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para
 
 <div align="center">
   <p><strong>Hecho con ❤️ por estudiantes, para estudiantes de Univalle</strong></p>
-  <p>© 2024 CrushUV - Universidad del Valle</p>
+  <p>© 2025 CrushUV - Universidad del Valle</p>
 </div>

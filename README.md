@@ -18,7 +18,6 @@
 - 💝 **Sistema de Matching**: Algoritmo inteligente para encontrar compatibilidades
 - 💬 **Chat Integrado**: Mensajería en tiempo real con matches
 - 🏫 **Filtros Académicos**: Busca por carrera, semestre o facultad
-- 📍 **Ubicación en Campus**: Encuentra personas cerca de ti en el campus
 - 🔒 **Seguridad y Privacidad**: Verificación de identidad estudiantil
 - 🌟 **Sistema de Valoraciones**: Califica la experiencia con otros usuarios
 - 📊 **Estadísticas de Perfil**: Visualiza tu actividad y popularidad

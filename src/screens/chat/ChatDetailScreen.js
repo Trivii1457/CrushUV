@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -12,57 +12,92 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {colors, spacing, borderRadius, fontSize, fontWeight} from '../../theme';
+import {useChat} from '../../context/ChatContext';
 
 const ChatDetailScreen = ({route, navigation}) => {
   const {match} = route.params || {
     match: {
+      id: 'conv_1',
+      matchId: 1,
       name: 'Ana María',
       photo: 'https://via.placeholder.com/60/FF6B6B/FFFFFF?text=A',
     },
   };
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      text: '¡Hola! Vi que también estudias en Univalle 😊',
-      sender: 'them',
-      timestamp: '10:30',
-    },
-    {
-      id: 2,
-      text: '¡Hola! Sí, estoy en tercer semestre',
-      sender: 'me',
-      timestamp: '10:32',
-    },
-    {
-      id: 3,
-      text: '¿Qué estudias?',
-      sender: 'them',
-      timestamp: '10:33',
-    },
-    {
-      id: 4,
-      text: 'Ingeniería de Sistemas, ¿y tú?',
-      sender: 'me',
-      timestamp: '10:35',
-    },
-  ]);
+  const {
+    sendMessage,
+    getConversationMessages,
+    joinConversation,
+    leaveConversation,
+    setTypingStatus,
+    markConversationAsRead,
+    isConnected,
+    typingUsers,
+    onlineUsers,
+  } = useChat();
 
   const [inputText, setInputText] = useState('');
+  const [messages, setMessages] = useState([]);
+  const flatListRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+
+  const conversationId = match.id || `conv_${match.matchId}`;
+  const isOnline = onlineUsers[match.matchId];
+  const isTyping = typingUsers[conversationId];
+
+  // Join conversation on mount
+  useEffect(() => {
+    joinConversation(conversationId);
+    markConversationAsRead(conversationId);
+
+    return () => {
+      leaveConversation(conversationId);
+    };
+  }, [conversationId]);
+
+  // Update messages when conversation changes
+  useEffect(() => {
+    const conversationMessages = getConversationMessages(conversationId);
+    setMessages(conversationMessages);
+    
+    // Scroll to bottom when new messages arrive
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({animated: true});
+    }, 100);
+  }, [conversationId, getConversationMessages]);
+
+  // Handle text input change
+  const handleTextChange = (text) => {
+    setInputText(text);
+
+    // Send typing indicator
+    if (text.trim()) {
+      setTypingStatus(conversationId, true);
+
+      // Clear previous timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      // Stop typing indicator after 2 seconds of no input
+      typingTimeoutRef.current = setTimeout(() => {
+        setTypingStatus(conversationId, false);
+      }, 2000);
+    } else {
+      setTypingStatus(conversationId, false);
+    }
+  };
 
   const handleSend = () => {
     if (inputText.trim()) {
-      const newMessage = {
-        id: messages.length + 1,
-        text: inputText,
-        sender: 'me',
-        timestamp: new Date().toLocaleTimeString('es-CO', {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      };
-      setMessages([...messages, newMessage]);
+      sendMessage(conversationId, inputText.trim(), match.matchId);
       setInputText('');
+      setTypingStatus(conversationId, false);
+      
+      // Clear typing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     }
   };
 
@@ -111,9 +146,20 @@ const ChatDetailScreen = ({route, navigation}) => {
           onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Image source={{uri: match.photo}} style={styles.headerAvatar} />
-        <Text style={styles.headerName}>{match.name}</Text>
+        <View style={styles.avatarContainer}>
+          <Image source={{uri: match.photo}} style={styles.headerAvatar} />
+          {isOnline && <View style={styles.onlineIndicator} />}
+        </View>
+        <View style={styles.headerInfo}>
+          <Text style={styles.headerName}>{match.name}</Text>
+          <Text style={styles.statusText}>
+            {isTyping ? 'Escribiendo...' : isOnline ? 'En línea' : 'Desconectado'}
+          </Text>
+        </View>
         <View style={styles.headerActions}>
+          {!isConnected && (
+            <Icon name="cloud-offline-outline" size={20} color={colors.error} style={{marginRight: spacing.sm}} />
+          )}
           <TouchableOpacity style={styles.headerButton}>
             <Icon name="videocam-outline" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -124,6 +170,7 @@ const ChatDetailScreen = ({route, navigation}) => {
       </View>
 
       <FlatList
+        ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
         keyExtractor={item => item.id.toString()}
@@ -138,7 +185,7 @@ const ChatDetailScreen = ({route, navigation}) => {
         <TextInput
           style={styles.input}
           value={inputText}
-          onChangeText={setInputText}
+          onChangeText={handleTextChange}
           placeholder="Escribe un mensaje..."
           placeholderTextColor={colors.textLight}
           multiline
@@ -168,19 +215,43 @@ const styles = StyleSheet.create({
   backButton: {
     marginRight: spacing.sm,
   },
+  avatarContainer: {
+    position: 'relative',
+    marginRight: spacing.sm,
+  },
   headerAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginRight: spacing.sm,
+  },
+  onlineIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: colors.success,
+    borderWidth: 2,
+    borderColor: colors.white,
+  },
+  headerInfo: {
+    flex: 1,
   },
   headerName: {
-    flex: 1,
     fontSize: fontSize.md,
     fontWeight: fontWeight.bold,
     color: colors.textDark,
   },
+  statusText: {
+    fontSize: fontSize.xs,
+    color: colors.textLight,
+    marginTop: 2,
+  },
   headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
     flexDirection: 'row',
   },
   headerButton: {

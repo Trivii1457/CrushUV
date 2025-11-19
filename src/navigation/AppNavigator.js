@@ -1,0 +1,94 @@
+import React, {useState} from 'react';
+import {createStackNavigator} from '@react-navigation/stack';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/Ionicons';
+
+// Auth Screens
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
+import EmailVerificationScreen from '../screens/auth/EmailVerificationScreen';
+
+// Main Screens
+import DiscoverScreen from '../screens/discover/DiscoverScreen';
+import MatchesScreen from '../screens/matches/MatchesScreen';
+import ChatListScreen from '../screens/chat/ChatListScreen';
+import ChatDetailScreen from '../screens/chat/ChatDetailScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
+import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import CreateProfileScreen from '../screens/profile/CreateProfileScreen';
+import SettingsScreen from '../screens/settings/SettingsScreen';
+
+import {colors} from '../theme';
+
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+const MainTabs = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={({route}) => ({
+        tabBarIcon: ({focused, color, size}) => {
+          let iconName;
+
+          if (route.name === 'Discover') {
+            iconName = focused ? 'flame' : 'flame-outline';
+          } else if (route.name === 'Matches') {
+            iconName = focused ? 'heart' : 'heart-outline';
+          } else if (route.name === 'Chat') {
+            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
+
+          return <Icon name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textLight,
+        headerShown: false,
+        tabBarStyle: {
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          paddingBottom: 5,
+          paddingTop: 5,
+          height: 60,
+        },
+      })}>
+      <Tab.Screen name="Discover" component={DiscoverScreen} options={{title: 'Descubrir'}} />
+      <Tab.Screen name="Matches" component={MatchesScreen} options={{title: 'Matches'}} />
+      <Tab.Screen name="Chat" component={ChatListScreen} options={{title: 'Chats'}} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{title: 'Perfil'}} />
+    </Tab.Navigator>
+  );
+};
+
+const AppNavigator = () => {
+  // In a real app, this would be managed by authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}>
+      {!isAuthenticated ? (
+        // Auth Stack
+        <>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
+          <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
+        </>
+      ) : (
+        // Main App Stack
+        <>
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+        </>
+      )}
+    </Stack.Navigator>
+  );
+};
+
+export default AppNavigator;

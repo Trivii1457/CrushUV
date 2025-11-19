@@ -9,37 +9,10 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {colors, spacing, borderRadius, fontSize, fontWeight} from '../../theme';
+import {useChat} from '../../context/ChatContext';
 
 const ChatListScreen = ({navigation}) => {
-  const chats = [
-    {
-      id: 1,
-      name: 'Ana María',
-      photo: 'https://via.placeholder.com/60/FF6B6B/FFFFFF?text=A',
-      lastMessage: '¡Hola! ¿Cómo estás?',
-      timestamp: '2m',
-      unread: 2,
-      online: true,
-    },
-    {
-      id: 2,
-      name: 'Carlos',
-      photo: 'https://via.placeholder.com/60/4ECDC4/FFFFFF?text=C',
-      lastMessage: 'Nos vemos mañana en la U',
-      timestamp: '1h',
-      unread: 0,
-      online: false,
-    },
-    {
-      id: 3,
-      name: 'Sofía',
-      photo: 'https://via.placeholder.com/60/95E1D3/FFFFFF?text=S',
-      lastMessage: '😊',
-      timestamp: '3h',
-      unread: 1,
-      online: true,
-    },
-  ];
+  const {conversations, isConnected} = useChat();
 
   const renderChat = ({item}) => (
     <TouchableOpacity
@@ -78,14 +51,19 @@ const ChatListScreen = ({navigation}) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chats</Text>
-        <TouchableOpacity>
-          <Icon name="search-outline" size={24} color={colors.text} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          {!isConnected && (
+            <Icon name="cloud-offline-outline" size={20} color={colors.error} style={{marginRight: spacing.md}} />
+          )}
+          <TouchableOpacity>
+            <Icon name="search-outline" size={24} color={colors.text} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {chats.length > 0 ? (
+      {conversations.length > 0 ? (
         <FlatList
-          data={chats}
+          data={conversations}
           renderItem={renderChat}
           keyExtractor={item => item.id.toString()}
           contentContainerStyle={styles.chatsList}
@@ -123,6 +101,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xl,
     fontWeight: fontWeight.bold,
     color: colors.textDark,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   chatsList: {
     paddingVertical: spacing.sm,

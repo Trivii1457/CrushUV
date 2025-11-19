@@ -18,7 +18,9 @@
 - 🎓 **Exclusivo para Universidad del Valle**: Solo estudiantes verificados pueden acceder
 - 👤 **Perfiles Personalizados**: Crea un perfil atractivo con fotos y información académica
 - 💝 **Sistema de Matching**: Algoritmo inteligente para encontrar compatibilidades
-- 💬 **Chat Integrado**: Mensajería en tiempo real con matches
+- 💬 **Chat en Tiempo Real**: Mensajería instantánea con WebSocket (Socket.IO)
+- ⌨️ **Indicadores de Escritura**: Ve cuando alguien está escribiendo
+- 🟢 **Estado Online**: Sabe cuando tus matches están conectados
 - 🏫 **Filtros Académicos**: Busca por carrera, semestre o facultad
 - 🔒 **Seguridad y Privacidad**: Verificación de identidad estudiantil
 - 🌟 **Sistema de Valoraciones**: Califica la experiencia con otros usuarios
@@ -27,19 +29,24 @@
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **Lenguaje**: Kotlin
-- **Plataforma**: Android (API 24+)
-- **Arquitectura**: MVVM (Model-View-ViewModel)
-- **Base de Datos**: Room Database + Firebase Firestore
-- **Autenticación**: Firebase Authentication
-- **Almacenamiento**: Firebase Storage
-- **Mensajería**: Firebase Cloud Messaging
+### React Native Version
+- **Framework**: React Native 0.72.6
+- **Lenguaje**: JavaScript (ES6+)
+- **Navegación**: React Navigation v6
+- **Estado Global**: React Context API
+- **Chat en Tiempo Real**: Socket.IO Client
+- **UI Components**: Custom components + React Native Vector Icons
+- **Gestures**: React Native Gesture Handler
+- **Animaciones**: React Native Reanimated
+
+### Backend (Previsto)
+- **Lenguaje**: Node.js / Kotlin
+- **Base de Datos**: Firebase Firestore / PostgreSQL
+- **Autenticación**: Firebase Authentication / JWT
+- **Almacenamiento**: Firebase Storage / AWS S3
+- **Mensajería en Tiempo Real**: Socket.IO Server
+- **Push Notifications**: Firebase Cloud Messaging
 - **Maps**: Google Maps API
-- **UI Framework**: Material Design Components
-- **Navegación**: Navigation Component
-- **Inyección de Dependencias**: Hilt
-- **Imágenes**: Glide
-- **Networking**: Retrofit + OkHttp
 
 ## 📋 Requisitos del Sistema
 
@@ -52,7 +59,7 @@
 
 ## 🚀 Instalación y Configuración
 
-### Para Desarrolladores
+### Para Desarrolladores - React Native
 
 1. **Clona el repositorio**:
    ```bash
@@ -60,28 +67,52 @@
    cd CrushUV
    ```
 
-2. **Abre el proyecto en Android Studio**:
-   - Instala Android Studio Arctic Fox o superior
-   - Importa el proyecto
-   - Sincroniza las dependencias de Gradle
-
-3. **Configuración de Firebase**:
-   - Crea un proyecto en [Firebase Console](https://console.firebase.google.com/)
-   - Descarga el archivo `google-services.json`
-   - Colócalo en la carpeta `app/`
-   - Habilita Authentication, Firestore y Storage
-
-4. **Configuración de APIs**:
-   - Obtén una API Key de Google Maps
-   - Añade la clave en `local.properties`:
-     ```properties
-     MAPS_API_KEY=tu_api_key_aqui
-     ```
-
-5. **Ejecuta la aplicación**:
+2. **Instala las dependencias**:
    ```bash
-   ./gradlew assembleDebug
+   npm install
+   # o
+   yarn install
    ```
+
+3. **Configura el servidor WebSocket**:
+   
+   El chat en tiempo real requiere un servidor Socket.IO. Para desarrollo local:
+   
+   ```bash
+   # Instala dependencias del servidor de ejemplo
+   npm install --prefix . express socket.io cors
+   
+   # Inicia el servidor
+   node example-server.js
+   ```
+   
+   El servidor estará disponible en `http://localhost:3000`
+
+4. **Ejecuta la aplicación**:
+   
+   Para iOS:
+   ```bash
+   cd ios && pod install && cd ..
+   npm run ios
+   ```
+   
+   Para Android:
+   ```bash
+   npm run android
+   ```
+
+5. **Configuración de producción**:
+   
+   Actualiza la URL del servidor en `src/services/socketService.js`:
+   ```javascript
+   const SOCKET_URL = 'https://tu-servidor.com';
+   ```
+
+### Para Desarrolladores - Servidor Backend
+
+Para implementar tu propio servidor Socket.IO, consulta:
+- [WEBSOCKET_IMPLEMENTATION.md](WEBSOCKET_IMPLEMENTATION.md) - Guía completa
+- [example-server.js](example-server.js) - Servidor de ejemplo
 
 ### Para Usuarios
 

@@ -1,11 +1,13 @@
 # 💕 CrushUV
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Platform-Android-green.svg" alt="Platform">
-  <img src="https://img.shields.io/badge/Language-Kotlin-blue.svg" alt="Language">
+  <img src="https://img.shields.io/badge/Platform-iOS%20%7C%20Android-green.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/Framework-React%20Native-blue.svg" alt="Framework">
   <img src="https://img.shields.io/badge/University-Universidad%20del%20Valle-red.svg" alt="University">
-  <img src="https://img.shields.io/badge/Status-En%20Desarrollo-yellow.svg" alt="Status">
+  <img src="https://img.shields.io/badge/Status-Prototipo-yellow.svg" alt="Status">
 </div>
+
+> 🚀 **Nota**: Este proyecto ahora incluye una implementación completa en React Native. Consulta [REACT_NATIVE_README.md](REACT_NATIVE_README.md) para más detalles sobre la versión React Native.
 
 ## 📱 Descripción
 

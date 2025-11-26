@@ -1,4 +1,4 @@
-package com.crushuvnew
+package com.crushuv
 
 import android.app.Application
 import com.facebook.react.PackageList

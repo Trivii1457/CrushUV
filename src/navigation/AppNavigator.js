@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, createContext, useContext} from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -22,6 +22,11 @@ import {colors} from '../theme';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// Auth Context to share authentication state
+export const AuthContext = createContext();
+
+export const useAuth = () => useContext(AuthContext);
 
 const MainTabs = () => {
   return (
@@ -65,29 +70,34 @@ const AppNavigator = () => {
   // In a real app, this would be managed by authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  const login = () => setIsAuthenticated(true);
+  const logout = () => setIsAuthenticated(false);
+
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}>
-      {!isAuthenticated ? (
-        // Auth Stack
-        <>
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-          <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
-          <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
-        </>
-      ) : (
-        // Main App Stack
-        <>
-          <Stack.Screen name="MainTabs" component={MainTabs} />
-          <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
-          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-          <Stack.Screen name="Settings" component={SettingsScreen} />
-        </>
-      )}
-    </Stack.Navigator>
+    <AuthContext.Provider value={{isAuthenticated, login, logout}}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+        }}>
+        {!isAuthenticated ? (
+          // Auth Stack
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
+            <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
+          </>
+        ) : (
+          // Main App Stack
+          <>
+            <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+          </>
+        )}
+      </Stack.Navigator>
+    </AuthContext.Provider>
   );
 };
 

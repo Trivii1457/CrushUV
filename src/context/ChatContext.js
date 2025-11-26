@@ -1,44 +1,49 @@
-import React, {createContext, useState, useEffect, useContext} from 'react';
-import socketService from '../services/socketService';
+import React, {createContext, useState, useEffect, useContext, useCallback} from 'react';
+
+// Firebase imports (optional - app works in demo mode without them)
+let firestore = null;
+let auth = null;
+try {
+  firestore = require('@react-native-firebase/firestore').default;
+  auth = require('@react-native-firebase/auth').default;
+} catch (e) {
+  console.log('Firebase not available, using demo mode');
+}
 
 const ChatContext = createContext();
 
 export const ChatProvider = ({children}) => {
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState({});
-  const [isConnected, setIsConnected] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState('user_123'); // Simulated user ID
+  const [isConnected, setIsConnected] = useState(true); // Demo mode always connected
+  const [currentUserId, setCurrentUserId] = useState('user_123');
   const [typingUsers, setTypingUsers] = useState({});
   const [onlineUsers, setOnlineUsers] = useState({});
+  const [useFirebase, setUseFirebase] = useState(false);
 
-  // Initialize socket connection
+  // Initialize
   useEffect(() => {
-    // Connect to socket server
-    socketService.connect(currentUserId);
-
-    // Listen for new messages
-    socketService.onNewMessage(handleNewMessage);
-
-    // Listen for typing status
-    socketService.onTyping(handleTyping);
-
-    // Listen for user status changes
-    socketService.onUserStatusChange(handleUserStatusChange);
-
-    // Update connection status
-    const checkConnection = setInterval(() => {
-      setIsConnected(socketService.isConnected());
-    }, 1000);
-
-    // Initialize with sample conversations for demo purposes
-    initializeSampleData();
-
-    return () => {
-      clearInterval(checkConnection);
-      socketService.removeAllListeners();
-      socketService.disconnect();
-    };
+    initializeChat();
   }, []);
+
+  const initializeChat = async () => {
+    // Try Firebase auth
+    if (auth) {
+      const user = auth().currentUser;
+      if (user) {
+        setCurrentUserId(user.uid);
+        setUseFirebase(true);
+        setIsConnected(true);
+        console.log('Using Firebase with user:', user.uid);
+        return;
+      }
+    }
+    
+    // Fall back to demo mode
+    console.log('Using demo mode');
+    setIsConnected(true);
+    initializeSampleData();
+  };
 
   /**
    * Initialize sample data for demo purposes
@@ -192,7 +197,7 @@ export const ChatProvider = ({children}) => {
   /**
    * Send a message
    */
-  const sendMessage = (conversationId, text, recipientId) => {
+  const sendMessage = async (conversationId, text, recipientId) => {
     const timestamp = new Date().toLocaleTimeString('es-CO', {
       hour: '2-digit',
       minute: '2-digit',
@@ -209,29 +214,46 @@ export const ChatProvider = ({children}) => {
     // Optimistically add message to local state
     handleNewMessage(messageData);
 
-    // Send message through socket
-    socketService.sendMessage(messageData);
+    // If using Firebase, also save to Firestore
+    if (useFirebase && firestore) {
+      try {
+        await firestore()
+          .collection('conversations')
+          .doc(conversationId)
+          .collection('messages')
+          .add({
+            text,
+            senderId: currentUserId,
+            receiverId: recipientId,
+            timestamp: firestore.FieldValue.serverTimestamp(),
+            read: false,
+          });
+      } catch (error) {
+        console.error('Error sending message to Firebase:', error);
+      }
+    }
   };
 
   /**
    * Join a conversation
    */
   const joinConversation = (conversationId) => {
-    socketService.joinConversation(conversationId);
+    console.log('Joined conversation:', conversationId);
   };
 
   /**
    * Leave a conversation
    */
   const leaveConversation = (conversationId) => {
-    socketService.leaveConversation(conversationId);
+    console.log('Left conversation:', conversationId);
   };
 
   /**
    * Send typing status
    */
   const setTypingStatus = (conversationId, isTyping) => {
-    socketService.sendTypingStatus(conversationId, isTyping);
+    // In demo mode, just log
+    console.log('Typing status:', conversationId, isTyping);
   };
 
   /**

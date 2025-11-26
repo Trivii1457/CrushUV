@@ -1,4 +1,4 @@
-package com.crushuvnew
+package com.crushuv
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

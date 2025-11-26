@@ -252,8 +252,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-    flexDirection: 'row',
-  },
   headerButton: {
     marginLeft: spacing.md,
   },

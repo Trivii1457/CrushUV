@@ -6,13 +6,16 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import {colors, spacing, borderRadius, fontSize, fontWeight, shadows} from '../../theme';
+import {useAuth} from '../../navigation/AppNavigator';
 
 const CreateProfileScreen = ({navigation}) => {
+  const {login} = useAuth();
   const [photos, setPhotos] = useState([null, null, null, null, null, null]);
   const [bio, setBio] = useState('');
   const [career, setCareer] = useState('');
@@ -28,11 +31,27 @@ const CreateProfileScreen = ({navigation}) => {
   };
 
   const handleComplete = () => {
+    // Validate required fields
+    const photosCount = photos.filter(p => p !== null).length;
+    if (photosCount < 1) {
+      Alert.alert('Error', 'Añade al menos 1 foto');
+      return;
+    }
+    if (!career.trim()) {
+      Alert.alert('Error', 'Ingresa tu carrera');
+      return;
+    }
+    if (!semester.trim()) {
+      Alert.alert('Error', 'Ingresa tu semestre');
+      return;
+    }
+
     setLoading(true);
     // Simulate API call
     setTimeout(() => {
       setLoading(false);
-      // Navigate to main app
+      // Mark as authenticated and navigate to main app
+      login();
     }, 1500);
   };
 

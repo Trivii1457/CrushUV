@@ -17,6 +17,7 @@ export const ChatProvider = ({children}) => {
   const [messages, setMessages] = useState({});
   const [isConnected, setIsConnected] = useState(true); // Demo mode always connected
   const [currentUserId, setCurrentUserId] = useState('user_123');
+  // typingUsers is read-only in demo mode - would be updated via Firebase listeners in production
   const [typingUsers] = useState({});
   const [onlineUsers, setOnlineUsers] = useState({});
   const [useFirebase, setUseFirebase] = useState(false);

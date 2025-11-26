@@ -12,10 +12,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import {colors, spacing, borderRadius, fontSize, fontWeight, shadows} from '../../theme';
-import {useAuth} from '../../navigation/AppNavigator';
 
 const CreateProfileScreen = ({navigation}) => {
-  const {login} = useAuth();
   const [photos, setPhotos] = useState([null, null, null, null, null, null]);
   const [bio, setBio] = useState('');
   const [career, setCareer] = useState('');
@@ -47,11 +45,12 @@ const CreateProfileScreen = ({navigation}) => {
     }
 
     setLoading(true);
-    // Simulate API call
+    // In a real app, this would save profile to Firebase
+    // Profile is complete - user is already authenticated via Firebase
     setTimeout(() => {
       setLoading(false);
-      // Mark as authenticated and navigate to main app
-      login();
+      // Navigation is handled by auth state - user is already logged in
+      Alert.alert('Éxito', 'Tu perfil ha sido creado');
     }, 1500);
   };
 

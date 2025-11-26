@@ -8,7 +8,7 @@ import {
   Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {colors, spacing, borderRadius, fontSize, fontWeight} from '../../theme';
+import {colors, spacing, fontSize, fontWeight} from '../../theme';
 import {useChat} from '../../context/ChatContext';
 
 const ChatListScreen = ({navigation}) => {

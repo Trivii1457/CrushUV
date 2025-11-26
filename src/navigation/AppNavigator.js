@@ -1,6 +1,7 @@
-import React, {useState, createContext, useContext} from 'react';
+import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {View, ActivityIndicator, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 // Auth Screens
@@ -19,34 +20,33 @@ import CreateProfileScreen from '../screens/profile/CreateProfileScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 
 import {colors} from '../theme';
+import {useAuth} from '../context/AuthContext';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Auth Context to share authentication state
-export const AuthContext = createContext();
+const getTabBarIcon = (routeName, focused, color, size) => {
+  let iconName;
 
-export const useAuth = () => useContext(AuthContext);
+  if (routeName === 'Discover') {
+    iconName = focused ? 'flame' : 'flame-outline';
+  } else if (routeName === 'Matches') {
+    iconName = focused ? 'heart' : 'heart-outline';
+  } else if (routeName === 'Chat') {
+    iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+  } else if (routeName === 'Profile') {
+    iconName = focused ? 'person' : 'person-outline';
+  }
+
+  return <Icon name={iconName} size={size} color={color} />;
+};
 
 const MainTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({
-        tabBarIcon: ({focused, color, size}) => {
-          let iconName;
-
-          if (route.name === 'Discover') {
-            iconName = focused ? 'flame' : 'flame-outline';
-          } else if (route.name === 'Matches') {
-            iconName = focused ? 'heart' : 'heart-outline';
-          } else if (route.name === 'Chat') {
-            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
+        tabBarIcon: ({focused, color, size}) =>
+          getTabBarIcon(route.name, focused, color, size),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textLight,
         headerShown: false,
@@ -67,38 +67,50 @@ const MainTabs = () => {
 };
 
 const AppNavigator = () => {
-  // In a real app, this would be managed by authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const {isAuthenticated, loading} = useAuth();
 
-  const login = () => setIsAuthenticated(true);
-  const logout = () => setIsAuthenticated(false);
+  // Show loading screen while checking auth state
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
-    <AuthContext.Provider value={{isAuthenticated, login, logout}}>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}>
-        {!isAuthenticated ? (
-          // Auth Stack
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-            <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
-            <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
-          </>
-        ) : (
-          // Main App Stack
-          <>
-            <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
-            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
-            <Stack.Screen name="Settings" component={SettingsScreen} />
-          </>
-        )}
-      </Stack.Navigator>
-    </AuthContext.Provider>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}>
+      {!isAuthenticated ? (
+        // Auth Stack
+        <>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
+          <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
+        </>
+      ) : (
+        // Main App Stack
+        <>
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+        </>
+      )}
+    </Stack.Navigator>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+  },
+});
 
 export default AppNavigator;

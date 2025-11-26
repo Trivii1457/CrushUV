@@ -7,11 +7,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
-import {colors, spacing, borderRadius, fontSize, fontWeight} from '../../theme';
+import {colors, spacing, fontSize, fontWeight} from '../../theme';
+import {useAuth} from '../../context/AuthContext';
 
 const RegisterScreen = ({navigation}) => {
   const [name, setName] = useState('');
@@ -20,14 +22,53 @@ const RegisterScreen = ({navigation}) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [errors, setErrors] = useState({});
+  const {signUp, sendEmailVerification} = useAuth();
 
-  const handleRegister = () => {
+  const validateForm = () => {
+    const newErrors = {};
+    if (!name.trim()) {
+      newErrors.name = 'El nombre es requerido';
+    }
+    if (!email.trim()) {
+      newErrors.email = 'El correo es requerido';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Ingresa un correo válido';
+    }
+    if (!password) {
+      newErrors.password = 'La contraseña es requerida';
+    } else if (password.length < 6) {
+      newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
+    }
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Las contraseñas no coinciden';
+    }
+    if (!acceptedTerms) {
+      newErrors.terms = 'Debes aceptar los términos y condiciones';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleRegister = async () => {
+    if (!validateForm()) {
+      if (errors.terms) {
+        Alert.alert('Términos requeridos', errors.terms);
+      }
+      return;
+    }
+
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      navigation.navigate('EmailVerification');
-    }, 1500);
+    const result = await signUp(email, password);
+    setLoading(false);
+
+    if (result.success) {
+      // Send email verification
+      await sendEmailVerification();
+      navigation.navigate('EmailVerification', {email});
+    } else {
+      Alert.alert('Error', result.error);
+    }
   };
 
   return (
@@ -54,37 +95,61 @@ const RegisterScreen = ({navigation}) => {
         <Input
           label="Nombre Completo"
           value={name}
-          onChangeText={setName}
+          onChangeText={text => {
+            setName(text);
+            if (errors.name) {
+              setErrors({...errors, name: null});
+            }
+          }}
           placeholder="Tu nombre completo"
           iconName="person-outline"
+          error={errors.name}
         />
 
         <Input
           label="Correo Institucional"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={text => {
+            setEmail(text);
+            if (errors.email) {
+              setErrors({...errors, email: null});
+            }
+          }}
           placeholder="ejemplo@correounivalle.edu.co"
           keyboardType="email-address"
           autoCapitalize="none"
           iconName="mail-outline"
+          error={errors.email}
         />
 
         <Input
           label="Contraseña"
           value={password}
-          onChangeText={setPassword}
-          placeholder="Mínimo 8 caracteres"
+          onChangeText={text => {
+            setPassword(text);
+            if (errors.password) {
+              setErrors({...errors, password: null});
+            }
+          }}
+          placeholder="Mínimo 6 caracteres"
           secureTextEntry
           iconName="lock-closed-outline"
+          error={errors.password}
         />
 
         <Input
           label="Confirmar Contraseña"
           value={confirmPassword}
-          onChangeText={setConfirmPassword}
+          onChangeText={text => {
+            setConfirmPassword(text);
+            if (errors.confirmPassword) {
+              setErrors({...errors, confirmPassword: null});
+            }
+          }}
           placeholder="Repite tu contraseña"
           secureTextEntry
           iconName="lock-closed-outline"
+          error={errors.confirmPassword}
         />
 
         <TouchableOpacity

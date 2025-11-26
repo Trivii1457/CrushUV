@@ -1,4 +1,4 @@
-import React, {createContext, useState, useEffect, useContext, useCallback} from 'react';
+import React, {createContext, useState, useEffect, useContext} from 'react';
 
 // Firebase imports (optional - app works in demo mode without them)
 let firestore = null;
@@ -17,33 +17,9 @@ export const ChatProvider = ({children}) => {
   const [messages, setMessages] = useState({});
   const [isConnected, setIsConnected] = useState(true); // Demo mode always connected
   const [currentUserId, setCurrentUserId] = useState('user_123');
-  const [typingUsers, setTypingUsers] = useState({});
+  const [typingUsers] = useState({});
   const [onlineUsers, setOnlineUsers] = useState({});
   const [useFirebase, setUseFirebase] = useState(false);
-
-  // Initialize
-  useEffect(() => {
-    initializeChat();
-  }, []);
-
-  const initializeChat = async () => {
-    // Try Firebase auth
-    if (auth) {
-      const user = auth().currentUser;
-      if (user) {
-        setCurrentUserId(user.uid);
-        setUseFirebase(true);
-        setIsConnected(true);
-        console.log('Using Firebase with user:', user.uid);
-        return;
-      }
-    }
-    
-    // Fall back to demo mode
-    console.log('Using demo mode');
-    setIsConnected(true);
-    initializeSampleData();
-  };
 
   /**
    * Initialize sample data for demo purposes
@@ -118,7 +94,7 @@ export const ChatProvider = ({children}) => {
 
     setConversations(sampleConversations);
     setMessages(sampleMessages);
-    
+
     // Set initial online status
     const initialOnlineUsers = {};
     sampleConversations.forEach(conv => {
@@ -126,6 +102,31 @@ export const ChatProvider = ({children}) => {
     });
     setOnlineUsers(initialOnlineUsers);
   };
+
+  // Initialize
+  useEffect(() => {
+    const initializeChat = async () => {
+      // Try Firebase auth
+      if (auth) {
+        const user = auth().currentUser;
+        if (user) {
+          setCurrentUserId(user.uid);
+          setUseFirebase(true);
+          setIsConnected(true);
+          console.log('Using Firebase with user:', user.uid);
+          return;
+        }
+      }
+
+      // Fall back to demo mode
+      console.log('Using demo mode');
+      setIsConnected(true);
+      initializeSampleData();
+    };
+
+    initializeChat();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Handle new incoming message
@@ -163,33 +164,6 @@ export const ChatProvider = ({children}) => {
               unread: senderId !== currentUserId ? conv.unread + 1 : conv.unread,
             }
           : conv,
-      ),
-    );
-  };
-
-  /**
-   * Handle typing status
-   */
-  const handleTyping = ({conversationId, userId, isTyping}) => {
-    setTypingUsers((prev) => ({
-      ...prev,
-      [conversationId]: isTyping ? userId : null,
-    }));
-  };
-
-  /**
-   * Handle user status changes
-   */
-  const handleUserStatusChange = ({userId, online}) => {
-    setOnlineUsers((prev) => ({
-      ...prev,
-      [userId]: online,
-    }));
-
-    // Update conversation list
-    setConversations((prevConversations) =>
-      prevConversations.map((conv) =>
-        conv.matchId === userId ? {...conv, online} : conv,
       ),
     );
   };

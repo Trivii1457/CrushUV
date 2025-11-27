@@ -15,9 +15,12 @@ import {PermissionsAndroid} from 'react-native';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import profileService from '../../services/profileService';
+import userService from '../../services/userService';
+import {useAuth} from '../../context/AuthContext';
 import {colors, spacing, borderRadius, fontSize, fontWeight, shadows} from '../../theme';
 
 const CreateProfileScreen = ({navigation}) => {
+  const {user, refreshProfile} = useAuth();
   const [photos, setPhotos] = useState([null, null, null, null, null, null]);
   const [bio, setBio] = useState('');
   const [career, setCareer] = useState('');
@@ -89,7 +92,7 @@ const CreateProfileScreen = ({navigation}) => {
   const pickAndSavePhoto = async (source, index) => {
     try {
       setUploadingIndex(index);
-      
+
       // Pick image
       const uri = await profileService.pickImage(source);
       if (!uri) {
@@ -99,12 +102,12 @@ const CreateProfileScreen = ({navigation}) => {
 
       // Save locally
       const savedPath = await profileService.savePhotoLocally(uri, index);
-      
+
       // Update state
       const newPhotos = [...photos];
       newPhotos[index] = savedPath;
       setPhotos(newPhotos);
-      
+
       setUploadingIndex(null);
     } catch (error) {
       setUploadingIndex(null);
@@ -113,7 +116,7 @@ const CreateProfileScreen = ({navigation}) => {
   };
 
   const handleDeletePhoto = index => {
-    if (!photos[index]) return;
+    if (!photos[index]) {return;}
 
     Alert.alert(
       'Eliminar foto',
@@ -156,17 +159,31 @@ const CreateProfileScreen = ({navigation}) => {
 
     setLoading(true);
     try {
-      // Save profile to Firestore
-      await profileService.saveProfile({
+      // Calculate age from birth date
+      const age = userService.calculateAge(birthDate);
+
+      // Get local photo paths
+      const validPhotos = photos.filter(p => p !== null);
+
+      // Update user profile in Firestore
+      await userService.updateUser(user.uid, {
         bio,
         career,
         semester,
         birthDate,
+        age,
+        photos: validPhotos,
+        photosCount: validPhotos.length,
+        hasLocalPhotos: validPhotos.length > 0,
+        isProfileComplete: true,
       });
-      
+
+      // Refresh auth context with new profile
+      await refreshProfile();
+
       setLoading(false);
       Alert.alert('Éxito', 'Tu perfil ha sido creado', [
-        {text: 'OK', onPress: () => navigation.replace('Main')},
+        {text: 'OK', onPress: () => navigation.replace('MainTabs')},
       ]);
     } catch (error) {
       setLoading(false);

@@ -67,17 +67,17 @@ const profileService = {
     // Save reference in AsyncStorage
     const photosJson = await AsyncStorage.getItem(PHOTOS_STORAGE_KEY);
     const photos = photosJson ? JSON.parse(photosJson) : {};
-    
+
     if (!photos[user.uid]) {
       photos[user.uid] = [];
     }
-    
+
     // Delete old photo at this index if exists
     const oldPhoto = photos[user.uid][index];
     if (oldPhoto && await RNFS.exists(oldPhoto)) {
       await RNFS.unlink(oldPhoto);
     }
-    
+
     photos[user.uid][index] = destPath;
     await AsyncStorage.setItem(PHOTOS_STORAGE_KEY, JSON.stringify(photos));
 
@@ -116,11 +116,11 @@ const profileService = {
    */
   deleteLocalPhoto: async (index) => {
     const user = auth().currentUser;
-    if (!user) return;
+    if (!user) {return;}
 
     const photosJson = await AsyncStorage.getItem(PHOTOS_STORAGE_KEY);
     const photos = photosJson ? JSON.parse(photosJson) : {};
-    
+
     if (photos[user.uid] && photos[user.uid][index]) {
       const photoPath = photos[user.uid][index];
       if (await RNFS.exists(photoPath)) {

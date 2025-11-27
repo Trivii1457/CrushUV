@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,30 +6,98 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {colors, spacing, borderRadius, fontSize, fontWeight, shadows} from '../../theme';
+import {useAuth} from '../../context/AuthContext';
+import profileService from '../../services/profileService';
+import matchService from '../../services/matchService';
 
 const ProfileScreen = ({navigation}) => {
-  const profile = {
-    name: 'María García',
-    age: 22,
-    photos: [
-      'https://via.placeholder.com/400x500',
-      'https://via.placeholder.com/400x500',
-      'https://via.placeholder.com/400x500',
-    ],
-    career: 'Ingeniería de Sistemas',
-    semester: '5',
-    bio: 'Me encanta la tecnología, el café y conocer nuevas personas. Busco alguien con quien compartir buenos momentos en el campus 🎓☕',
-    interests: ['Tecnología', 'Música', 'Cine', 'Deportes'],
+  const {user, profile, refreshProfile} = useAuth();
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    matches: 0,
+    likes: 0,
+    superLikes: 0,
+  });
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) {return;}
+
+      try {
+        // Load local photos
+        const localPhotos = await profileService.getLocalPhotos();
+        const validPhotos = localPhotos.filter(p => p !== null);
+        setPhotos(validPhotos);
+
+        // Load matches count
+        const matches = await matchService.getMatches(user.uid);
+        setStats({
+          matches: matches.length,
+          likes: 0, // Would need separate tracking
+          superLikes: 0, // Would need separate tracking
+        });
+
+        // Refresh profile from Firestore
+        await refreshProfile();
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const calculateAge = (birthDate) => {
+    if (!birthDate) {return null;}
+    const parts = birthDate.split('/');
+    if (parts.length !== 3) {return null;}
+    const birth = new Date(parts[2], parts[1] - 1, parts[0]);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
   };
 
-  const stats = [
-    {label: 'Matches', value: '24'},
-    {label: 'Me gusta', value: '156'},
-    {label: 'Super Likes', value: '8'},
+  const getPhotoUri = (photo) => {
+    if (!photo) {return 'https://via.placeholder.com/400x500/CCCCCC/FFFFFF?text=Sin+foto';}
+    if (photo.startsWith('/') || photo.startsWith('file://')) {
+      return `file://${photo.replace('file://', '')}`;
+    }
+    return photo;
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  const displayName = profile?.name || user?.displayName || 'Usuario';
+  const age = profile?.age || calculateAge(profile?.birthDate);
+  const career = profile?.career || '';
+  const semester = profile?.semester || '';
+  const bio = profile?.bio || 'Sin biografía aún';
+  const interests = profile?.interests || [];
+  const mainPhoto = photos.length > 0 ? getPhotoUri(photos[0]) : 'https://via.placeholder.com/400x500/CCCCCC/FFFFFF?text=Sin+foto';
+
+  const statsDisplay = [
+    {label: 'Matches', value: stats.matches.toString()},
+    {label: 'Me gusta', value: stats.likes.toString()},
+    {label: 'Super Likes', value: stats.superLikes.toString()},
   ];
 
   return (
@@ -40,7 +108,7 @@ const ProfileScreen = ({navigation}) => {
         showsVerticalScrollIndicator={false}>
         <View style={styles.headerImage}>
           <Image
-            source={{uri: profile.photos[0]}}
+            source={{uri: mainPhoto}}
             style={styles.mainPhoto}
             resizeMode="cover"
           />
@@ -49,14 +117,16 @@ const ProfileScreen = ({navigation}) => {
             style={styles.gradient}>
             <View style={styles.profileInfo}>
               <Text style={styles.name}>
-                {profile.name}, {profile.age}
+                {displayName}{age ? `, ${age}` : ''}
               </Text>
-              <View style={styles.academicInfo}>
-                <Icon name="school" size={18} color={colors.white} />
-                <Text style={styles.academicText}>
-                  {profile.career} - {profile.semester} semestre
-                </Text>
-              </View>
+              {(career || semester) && (
+                <View style={styles.academicInfo}>
+                  <Icon name="school" size={18} color={colors.white} />
+                  <Text style={styles.academicText}>
+                    {career}{semester ? ` - ${semester} semestre` : ''}
+                  </Text>
+                </View>
+              )}
             </View>
           </LinearGradient>
 
@@ -74,7 +144,7 @@ const ProfileScreen = ({navigation}) => {
         </View>
 
         <View style={styles.statsContainer}>
-          {stats.map((stat, index) => (
+          {statsDisplay.map((stat, index) => (
             <View key={index} style={styles.statBox}>
               <Text style={styles.statValue}>{stat.value}</Text>
               <Text style={styles.statLabel}>{stat.label}</Text>
@@ -84,31 +154,37 @@ const ProfileScreen = ({navigation}) => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sobre mí</Text>
-          <Text style={styles.bio}>{profile.bio}</Text>
+          <Text style={styles.bio}>{bio}</Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Intereses</Text>
-          <View style={styles.interestsContainer}>
-            {profile.interests.map((interest, index) => (
-              <View key={index} style={styles.interestTag}>
-                <Text style={styles.interestText}>{interest}</Text>
-              </View>
-            ))}
+        {interests.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Intereses</Text>
+            <View style={styles.interestsContainer}>
+              {interests.map((interest, index) => (
+                <View key={index} style={styles.interestTag}>
+                  <Text style={styles.interestText}>{interest}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mis fotos</Text>
           <View style={styles.photosGrid}>
-            {profile.photos.map((photo, index) => (
-              <Image
-                key={index}
-                source={{uri: photo}}
-                style={styles.gridPhoto}
-                resizeMode="cover"
-              />
-            ))}
+            {photos.length > 0 ? (
+              photos.map((photo, index) => (
+                <Image
+                  key={index}
+                  source={{uri: getPhotoUri(photo)}}
+                  style={styles.gridPhoto}
+                  resizeMode="cover"
+                />
+              ))
+            ) : (
+              <Text style={styles.noPhotosText}>No has subido fotos aún</Text>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -251,6 +327,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     borderRadius: borderRadius.md,
     ...shadows.sm,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+  },
+  noPhotosText: {
+    fontSize: fontSize.md,
+    color: colors.textLight,
+    textAlign: 'center',
+    width: '100%',
+    paddingVertical: spacing.lg,
   },
 });
 

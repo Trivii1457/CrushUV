@@ -33,20 +33,49 @@ const CreateProfileScreen = ({navigation}) => {
   const requestPermissions = async () => {
     if (Platform.OS === 'android') {
       try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-        ]);
-        return (
-          granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED
-        );
+        // Android 13+ uses different permissions
+        const androidVersion = Platform.Version;
+        
+        let permissions = [PermissionsAndroid.PERMISSIONS.CAMERA];
+        
+        if (androidVersion >= 33) {
+          // Android 13+
+          permissions.push(PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES);
+        } else {
+          // Android 12 and below
+          permissions.push(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
+          permissions.push(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
+        }
+
+        const granted = await PermissionsAndroid.requestMultiple(permissions);
+        
+        const cameraGranted = granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED;
+        const storageGranted = androidVersion >= 33
+          ? granted['android.permission.READ_MEDIA_IMAGES'] === PermissionsAndroid.RESULTS.GRANTED
+          : granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED;
+
+        if (!cameraGranted || !storageGranted) {
+          Alert.alert(
+            'Permisos requeridos',
+            'Para subir fotos necesitas permitir acceso a la cámara y galería. Ve a Configuración > Apps > CrushUV > Permisos',
+            [{text: 'OK'}]
+          );
+          return false;
+        }
+        
+        return true;
       } catch (err) {
-        console.warn(err);
+        console.warn('Error requesting permissions:', err);
         return false;
       }
     }
     return true;
   };
+
+  // Request permissions on mount
+  useEffect(() => {
+    requestPermissions();
+  }, []);
 
   // Load existing photos on mount
   useEffect(() => {
@@ -282,6 +311,32 @@ const CreateProfileScreen = ({navigation}) => {
           loading={loading}
           style={styles.completeButton}
         />
+
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => {
+            Alert.alert(
+              'Cerrar sesión',
+              '¿Estás seguro de que quieres cerrar sesión?',
+              [
+                {text: 'Cancelar', style: 'cancel'},
+                {
+                  text: 'Cerrar sesión',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      const auth = require('@react-native-firebase/auth').default;
+                      await auth().signOut();
+                    } catch (error) {
+                      Alert.alert('Error', 'No se pudo cerrar sesión');
+                    }
+                  },
+                },
+              ],
+            );
+          }}>
+          <Text style={styles.logoutText}>Cerrar sesión y volver a Login</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -363,7 +418,17 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     marginTop: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  logoutButton: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
     marginBottom: spacing.xxl,
+  },
+  logoutText: {
+    color: colors.error || '#FF4444',
+    fontSize: fontSize.sm,
+    textDecorationLine: 'underline',
   },
 });
 

@@ -3,7 +3,7 @@
 
 // Configuration for the WebSocket server
 // In production, replace this with your actual backend URL
-const SOCKET_URL = 'http://localhost:3000';
+// const SOCKET_URL = 'http://localhost:3000';
 
 class SocketService {
   constructor() {

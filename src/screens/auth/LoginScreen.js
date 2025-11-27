@@ -7,25 +7,68 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import {colors, spacing, borderRadius, fontSize, fontWeight} from '../../theme';
+import {useAuth} from '../../context/AuthContext';
 
 const LoginScreen = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const {signIn, resetPassword} = useAuth();
 
-  const handleLogin = () => {
+  const validateForm = () => {
+    const newErrors = {};
+    if (!email.trim()) {
+      newErrors.email = 'El correo es requerido';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Ingresa un correo válido';
+    }
+    if (!password) {
+      newErrors.password = 'La contraseña es requerida';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLogin = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      // Navigate to main app
-    }, 1500);
+    const result = await signIn(email, password);
+    setLoading(false);
+
+    if (!result.success) {
+      Alert.alert('Error', result.error);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Alert.alert(
+        'Correo requerido',
+        'Ingresa tu correo electrónico para recuperar tu contraseña',
+      );
+      return;
+    }
+
+    const result = await resetPassword(email);
+    if (result.success) {
+      Alert.alert(
+        'Correo enviado',
+        'Te hemos enviado un correo para restablecer tu contraseña',
+      );
+    } else {
+      Alert.alert('Error', result.error);
+    }
   };
 
   return (
@@ -52,23 +95,35 @@ const LoginScreen = ({navigation}) => {
         <Input
           label="Correo Institucional"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={text => {
+            setEmail(text);
+            if (errors.email) {
+              setErrors({...errors, email: null});
+            }
+          }}
           placeholder="ejemplo@correounivalle.edu.co"
           keyboardType="email-address"
           autoCapitalize="none"
           iconName="mail-outline"
+          error={errors.email}
         />
 
         <Input
           label="Contraseña"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={text => {
+            setPassword(text);
+            if (errors.password) {
+              setErrors({...errors, password: null});
+            }
+          }}
           placeholder="••••••••"
           secureTextEntry
           iconName="lock-closed-outline"
+          error={errors.password}
         />
 
-        <TouchableOpacity style={styles.forgotPassword}>
+        <TouchableOpacity style={styles.forgotPassword} onPress={handleForgotPassword}>
           <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
         </TouchableOpacity>
 

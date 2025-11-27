@@ -6,41 +6,82 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {colors, spacing, borderRadius, fontSize, fontWeight} from '../../theme';
+import {useAuth} from '../../context/AuthContext';
+
+const SettingItem = ({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  showArrow = true,
+  rightComponent,
+}) => (
+  <TouchableOpacity
+    style={styles.settingItem}
+    onPress={onPress}
+    disabled={!onPress}>
+    <View style={styles.settingLeft}>
+      <View style={styles.iconContainer}>
+        <Icon name={icon} size={24} color={colors.primary} />
+      </View>
+      <View style={styles.settingText}>
+        <Text style={styles.settingTitle}>{title}</Text>
+        {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
+      </View>
+    </View>
+    {rightComponent || (showArrow && (
+      <Icon name="chevron-forward" size={20} color={colors.textLight} />
+    ))}
+  </TouchableOpacity>
+);
 
 const SettingsScreen = ({navigation}) => {
   const [notifications, setNotifications] = React.useState(true);
   const [showOnline, setShowOnline] = React.useState(true);
   const [showDistance, setShowDistance] = React.useState(true);
+  const {signOut} = useAuth();
 
-  const SettingItem = ({
-    icon,
-    title,
-    subtitle,
-    onPress,
-    showArrow = true,
-    rightComponent,
-  }) => (
-    <TouchableOpacity
-      style={styles.settingItem}
-      onPress={onPress}
-      disabled={!onPress}>
-      <View style={styles.settingLeft}>
-        <View style={styles.iconContainer}>
-          <Icon name={icon} size={24} color={colors.primary} />
-        </View>
-        <View style={styles.settingText}>
-          <Text style={styles.settingTitle}>{title}</Text>
-          {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
-        </View>
-      </View>
-      {rightComponent || (showArrow && (
-        <Icon name="chevron-forward" size={20} color={colors.textLight} />
-      ))}
-    </TouchableOpacity>
-  );
+  const handleLogout = () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que deseas cerrar sesión?',
+      [
+        {text: 'Cancelar', style: 'cancel'},
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await signOut();
+            if (!result.success) {
+              Alert.alert('Error', result.error);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Eliminar Cuenta',
+      '¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.',
+      [
+        {text: 'Cancelar', style: 'cancel'},
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            // In a real app, this would delete the account
+            Alert.alert('Función no disponible', 'Esta función estará disponible próximamente');
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -172,12 +213,12 @@ const SettingsScreen = ({navigation}) => {
           />
         </View>
 
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Icon name="log-out-outline" size={24} color={colors.error} />
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.deleteButton}>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
           <Text style={styles.deleteText}>Eliminar Cuenta</Text>
         </TouchableOpacity>
       </ScrollView>

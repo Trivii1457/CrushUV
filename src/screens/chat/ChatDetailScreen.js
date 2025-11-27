@@ -53,13 +53,13 @@ const ChatDetailScreen = ({route, navigation}) => {
     return () => {
       leaveConversation(conversationId);
     };
-  }, [conversationId]);
+  }, [conversationId, joinConversation, markConversationAsRead, leaveConversation]);
 
   // Update messages when conversation changes
   useEffect(() => {
     const conversationMessages = getConversationMessages(conversationId);
     setMessages(conversationMessages);
-    
+
     // Scroll to bottom when new messages arrive
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({animated: true});
@@ -93,7 +93,7 @@ const ChatDetailScreen = ({route, navigation}) => {
       sendMessage(conversationId, inputText.trim(), match.matchId);
       setInputText('');
       setTypingStatus(conversationId, false);
-      
+
       // Clear typing timeout
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);

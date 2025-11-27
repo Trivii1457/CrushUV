@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -7,30 +7,138 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import {PermissionsAndroid} from 'react-native';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
+import profileService from '../../services/profileService';
 import {colors, spacing, borderRadius, fontSize, fontWeight, shadows} from '../../theme';
-import {useAuth} from '../../navigation/AppNavigator';
 
 const CreateProfileScreen = ({navigation}) => {
-  const {login} = useAuth();
   const [photos, setPhotos] = useState([null, null, null, null, null, null]);
   const [bio, setBio] = useState('');
   const [career, setCareer] = useState('');
   const [semester, setSemester] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploadingIndex, setUploadingIndex] = useState(null);
 
-  const handleAddPhoto = index => {
-    // In a real app, this would open image picker
-    const newPhotos = [...photos];
-    newPhotos[index] = 'https://via.placeholder.com/400';
-    setPhotos(newPhotos);
+  // Request permissions on Android
+  const requestPermissions = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        ]);
+        return (
+          granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED
+        );
+      } catch (err) {
+        console.warn(err);
+        return false;
+      }
+    }
+    return true;
   };
 
-  const handleComplete = () => {
+  // Load existing photos on mount
+  useEffect(() => {
+    loadExistingPhotos();
+  }, []);
+
+  const loadExistingPhotos = async () => {
+    try {
+      const savedPhotos = await profileService.getLocalPhotos();
+      setPhotos(savedPhotos);
+    } catch (error) {
+      console.log('Error loading photos:', error);
+    }
+  };
+
+  const handleAddPhoto = async index => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      Alert.alert('Permiso denegado', 'Necesitamos acceso a la cámara y galería');
+      return;
+    }
+
+    Alert.alert(
+      'Añadir foto',
+      '¿De dónde quieres obtener la foto?',
+      [
+        {
+          text: 'Cámara',
+          onPress: () => pickAndSavePhoto('camera', index),
+        },
+        {
+          text: 'Galería',
+          onPress: () => pickAndSavePhoto('gallery', index),
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+      ],
+    );
+  };
+
+  const pickAndSavePhoto = async (source, index) => {
+    try {
+      setUploadingIndex(index);
+      
+      // Pick image
+      const uri = await profileService.pickImage(source);
+      if (!uri) {
+        setUploadingIndex(null);
+        return;
+      }
+
+      // Save locally
+      const savedPath = await profileService.savePhotoLocally(uri, index);
+      
+      // Update state
+      const newPhotos = [...photos];
+      newPhotos[index] = savedPath;
+      setPhotos(newPhotos);
+      
+      setUploadingIndex(null);
+    } catch (error) {
+      setUploadingIndex(null);
+      Alert.alert('Error', 'No se pudo guardar la foto: ' + error.message);
+    }
+  };
+
+  const handleDeletePhoto = index => {
+    if (!photos[index]) return;
+
+    Alert.alert(
+      'Eliminar foto',
+      '¿Estás seguro de que quieres eliminar esta foto?',
+      [
+        {text: 'Cancelar', style: 'cancel'},
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await profileService.deleteLocalPhoto(index);
+              const newPhotos = [...photos];
+              newPhotos[index] = null;
+              setPhotos(newPhotos);
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo eliminar la foto');
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleComplete = async () => {
     // Validate required fields
     const photosCount = photos.filter(p => p !== null).length;
     if (photosCount < 1) {
@@ -47,12 +155,23 @@ const CreateProfileScreen = ({navigation}) => {
     }
 
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Save profile to Firestore
+      await profileService.saveProfile({
+        bio,
+        career,
+        semester,
+        birthDate,
+      });
+      
       setLoading(false);
-      // Mark as authenticated and navigate to main app
-      login();
-    }, 1500);
+      Alert.alert('Éxito', 'Tu perfil ha sido creado', [
+        {text: 'OK', onPress: () => navigation.replace('Main')},
+      ]);
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Error', 'No se pudo guardar el perfil: ' + error.message);
+    }
   };
 
   return (
@@ -78,9 +197,21 @@ const CreateProfileScreen = ({navigation}) => {
             <TouchableOpacity
               key={index}
               style={styles.photoBox}
-              onPress={() => handleAddPhoto(index)}>
-              {photo ? (
-                <Image source={{uri: photo}} style={styles.photo} />
+              onPress={() => handleAddPhoto(index)}
+              onLongPress={() => handleDeletePhoto(index)}>
+              {uploadingIndex === index ? (
+                <View style={styles.photoPlaceholder}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+              ) : photo ? (
+                <>
+                  <Image source={{uri: `file://${photo}`}} style={styles.photo} />
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeletePhoto(index)}>
+                    <Icon name="close-circle" size={24} color={colors.error} />
+                  </TouchableOpacity>
+                </>
               ) : (
                 <View style={styles.photoPlaceholder}>
                   <Icon name="add" size={32} color={colors.primary} />
@@ -205,6 +336,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
     borderStyle: 'dashed',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: colors.white,
+    borderRadius: 12,
   },
   completeButton: {
     marginTop: spacing.xl,

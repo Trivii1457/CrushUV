@@ -1,5 +1,41 @@
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
+# CrushUV
+
+Una aplicación de citas para estudiantes de Univalle, construida con React Native y Firebase.
+
+## Configuración de Firebase
+
+La aplicación utiliza Firebase para autenticación y base de datos en tiempo real. Para configurar Firebase:
+
+### 1. Configuración de Android
+
+1. Ve a la [Consola de Firebase](https://console.firebase.google.com/)
+2. Crea un nuevo proyecto o usa el existente
+3. Agrega una app de Android con el package name `com.crushuv`
+4. Descarga el archivo `google-services.json`
+5. Coloca el archivo en `android/app/google-services.json`
+
+### 2. Configuración de iOS (opcional)
+
+1. En la consola de Firebase, agrega una app de iOS
+2. Descarga el archivo `GoogleService-Info.plist`
+3. Agrega el archivo a tu proyecto de Xcode en `ios/CrushUVNew/`
+
+### 3. Habilitar servicios en Firebase
+
+Asegúrate de tener habilitados los siguientes servicios:
+- **Authentication**: Habilita el proveedor de Email/Password
+- **Realtime Database** o **Firestore**: Para almacenar mensajes y datos de usuarios
+
+## Iconos
+
+La aplicación utiliza [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons) con la familia de iconos **Ionicons**. Los iconos están integrados en toda la aplicación para mejorar la experiencia de usuario.
+
+Para explorar los iconos disponibles, visita:
+- [Ionicons](https://ionic.io/ionicons)
+- [React Native Vector Icons Directory](https://oblador.github.io/react-native-vector-icons/)
+
 # Getting Started
 
 >**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.

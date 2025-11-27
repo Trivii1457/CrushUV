@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,46 +6,191 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Alert,
+  ActivityIndicator,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import {colors, spacing, borderRadius, fontSize, fontWeight, shadows} from '../../theme';
+import {useAuth} from '../../context/AuthContext';
+import profileService from '../../services/profileService';
+import userService from '../../services/userService';
 
 const EditProfileScreen = ({navigation}) => {
-  const [photos, setPhotos] = useState([
-    'https://via.placeholder.com/400',
-    'https://via.placeholder.com/400',
-    null,
-    null,
-    null,
-    null,
-  ]);
-  const [bio, setBio] = useState('Me encanta la tecnología, el café y conocer nuevas personas.');
-  const [career, setCareer] = useState('Ingeniería de Sistemas');
-  const [semester, setSemester] = useState('5');
-  const [interests, setInterests] = useState(['Tecnología', 'Música', 'Cine']);
+  const {user, profile, refreshProfile} = useAuth();
+  const [photos, setPhotos] = useState([null, null, null, null, null, null]);
+  const [bio, setBio] = useState('');
+  const [career, setCareer] = useState('');
+  const [semester, setSemester] = useState('');
+  const [interests, setInterests] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [uploadingIndex, setUploadingIndex] = useState(null);
 
-  const handleAddPhoto = index => {
-    const newPhotos = [...photos];
-    newPhotos[index] = 'https://via.placeholder.com/400';
-    setPhotos(newPhotos);
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) {return;}
+
+      try {
+        // Load local photos
+        const localPhotos = await profileService.getLocalPhotos();
+        setPhotos(localPhotos);
+
+        // Load profile data
+        if (profile) {
+          setBio(profile.bio || '');
+          setCareer(profile.career || '');
+          setSemester(profile.semester || '');
+          setInterests(profile.interests || []);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user, profile]);
+
+  const requestPermissions = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        ]);
+        return (
+          granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED
+        );
+      } catch (err) {
+        console.warn(err);
+        return false;
+      }
+    }
+    return true;
   };
 
-  const handleRemovePhoto = index => {
-    const newPhotos = [...photos];
-    newPhotos[index] = null;
-    setPhotos(newPhotos);
+  const handleAddPhoto = async (index) => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      Alert.alert('Permiso denegado', 'Necesitamos acceso a la cámara y galería');
+      return;
+    }
+
+    Alert.alert(
+      'Añadir foto',
+      '¿De dónde quieres obtener la foto?',
+      [
+        {
+          text: 'Cámara',
+          onPress: () => pickAndSavePhoto('camera', index),
+        },
+        {
+          text: 'Galería',
+          onPress: () => pickAndSavePhoto('gallery', index),
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+      ],
+    );
   };
 
-  const handleSave = () => {
+  const pickAndSavePhoto = async (source, index) => {
+    try {
+      setUploadingIndex(index);
+
+      const uri = await profileService.pickImage(source);
+      if (!uri) {
+        setUploadingIndex(null);
+        return;
+      }
+
+      const savedPath = await profileService.savePhotoLocally(uri, index);
+
+      const newPhotos = [...photos];
+      newPhotos[index] = savedPath;
+      setPhotos(newPhotos);
+
+      setUploadingIndex(null);
+    } catch (error) {
+      setUploadingIndex(null);
+      Alert.alert('Error', 'No se pudo guardar la foto: ' + error.message);
+    }
+  };
+
+  const handleRemovePhoto = (index) => {
+    if (!photos[index]) {return;}
+
+    Alert.alert(
+      'Eliminar foto',
+      '¿Estás seguro de que quieres eliminar esta foto?',
+      [
+        {text: 'Cancelar', style: 'cancel'},
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await profileService.deleteLocalPhoto(index);
+              const newPhotos = [...photos];
+              newPhotos[index] = null;
+              setPhotos(newPhotos);
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo eliminar la foto');
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleSave = async () => {
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      // Update profile in Firestore
+      await userService.updateUser(user.uid, {
+        bio,
+        career,
+        semester,
+        interests,
+        photosCount: photos.filter(p => p !== null).length,
+        hasLocalPhotos: photos.filter(p => p !== null).length > 0,
+      });
+
+      await refreshProfile();
+
       setLoading(false);
-      navigation.goBack();
-    }, 1500);
+      Alert.alert('Éxito', 'Tu perfil ha sido actualizado', [
+        {text: 'OK', onPress: () => navigation.goBack()},
+      ]);
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Error', 'No se pudo actualizar el perfil: ' + error.message);
+    }
   };
+
+  const getPhotoUri = (photo) => {
+    if (!photo) {return null;}
+    if (photo.startsWith('/') || photo.startsWith('file://')) {
+      return `file://${photo.replace('file://', '')}`;
+    }
+    return photo;
+  };
+
+  if (initialLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -67,9 +212,13 @@ const EditProfileScreen = ({navigation}) => {
         <View style={styles.photosGrid}>
           {photos.map((photo, index) => (
             <View key={index} style={styles.photoBox}>
-              {photo ? (
+              {uploadingIndex === index ? (
+                <View style={styles.photoPlaceholder}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+              ) : photo ? (
                 <>
-                  <Image source={{uri: photo}} style={styles.photo} />
+                  <Image source={{uri: getPhotoUri(photo)}} style={styles.photo} />
                   <TouchableOpacity
                     style={styles.removeButton}
                     onPress={() => handleRemovePhoto(index)}>
@@ -133,7 +282,20 @@ const EditProfileScreen = ({navigation}) => {
               </TouchableOpacity>
             </View>
           ))}
-          <TouchableOpacity style={styles.addInterestButton}>
+          <TouchableOpacity
+            style={styles.addInterestButton}
+            onPress={() => {
+              Alert.prompt(
+                'Añadir interés',
+                'Escribe un interés',
+                (text) => {
+                  if (text && text.trim()) {
+                    setInterests([...interests, text.trim()]);
+                  }
+                },
+                'plain-text'
+              );
+            }}>
             <Icon name="add" size={20} color={colors.primary} />
             <Text style={styles.addInterestText}>Añadir interés</Text>
           </TouchableOpacity>
@@ -270,6 +432,12 @@ const styles = StyleSheet.create({
   saveButton: {
     marginTop: spacing.xl,
     marginBottom: spacing.xxl,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
   },
 });
 

@@ -9,62 +9,61 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {colors, spacing, borderRadius, fontSize, fontWeight} from '../../theme';
-import {useChat} from '../../context/ChatContext';
+import {useAuth} from '../../context/AuthContext';
+import chatService from '../../services/chatService';
 
 const ChatDetailScreen = ({route, navigation}) => {
-  const {match} = route.params || {
-    match: {
-      id: 'conv_1',
-      matchId: 1,
-      name: 'Ana María',
-      photo: 'https://via.placeholder.com/60/FF6B6B/FFFFFF?text=A',
-    },
-  };
+  const {match} = route.params || {};
+  const {user} = useAuth();
 
-  const {
-    sendMessage,
-    getConversationMessages,
-    joinConversation,
-    leaveConversation,
-    setTypingStatus,
-    markConversationAsRead,
-    isConnected,
-    typingUsers,
-    onlineUsers,
-  } = useChat();
-
-  const [inputText, setInputText] = useState('');
   const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const [loading, setLoading] = useState(true);
   const flatListRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
-  const conversationId = match.id || `conv_${match.matchId}`;
-  const isOnline = onlineUsers[match.matchId];
-  const isTyping = typingUsers[conversationId];
+  const matchId = match?.id || match?.matchId;
+  const otherUser = match?.otherUser;
+  const otherUserName = match?.name || otherUser?.name || 'Usuario';
+  const otherUserPhoto = match?.photo || (otherUser?.photos?.[0]
+    ? (otherUser.photos[0].startsWith('/')
+      ? `file://${otherUser.photos[0]}`
+      : otherUser.photos[0])
+    : 'https://via.placeholder.com/60/CCCCCC/FFFFFF?text=?');
 
-  // Join conversation on mount
   useEffect(() => {
-    joinConversation(conversationId);
-    markConversationAsRead(conversationId);
+    if (!matchId || !user) {return;}
+
+    // Subscribe to messages in real-time
+    const unsubscribeMessages = chatService.subscribeToMessages(
+      matchId,
+      (msgs) => {
+        setMessages(msgs);
+        setLoading(false);
+      }
+    );
+
+    // Subscribe to typing status
+    const unsubscribeTyping = chatService.subscribeToTyping(
+      matchId,
+      user.uid,
+      setIsOtherTyping
+    );
+
+    // Mark messages as read
+    chatService.markAsRead(matchId, user.uid);
 
     return () => {
-      leaveConversation(conversationId);
+      unsubscribeMessages();
+      unsubscribeTyping();
+      chatService.setTypingStatus(matchId, false);
     };
-  }, [conversationId, joinConversation, markConversationAsRead, leaveConversation]);
-
-  // Update messages when conversation changes
-  useEffect(() => {
-    const conversationMessages = getConversationMessages(conversationId);
-    setMessages(conversationMessages);
-
-    // Scroll to bottom when new messages arrive
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({animated: true});
-    }, 100);
-  }, [conversationId, getConversationMessages]);
+  }, [matchId, user]);
 
   // Handle text input change
   const handleTextChange = (text) => {
@@ -72,7 +71,7 @@ const ChatDetailScreen = ({route, navigation}) => {
 
     // Send typing indicator
     if (text.trim()) {
-      setTypingStatus(conversationId, true);
+      chatService.setTypingStatus(matchId, true);
 
       // Clear previous timeout
       if (typingTimeoutRef.current) {
@@ -81,59 +80,90 @@ const ChatDetailScreen = ({route, navigation}) => {
 
       // Stop typing indicator after 2 seconds of no input
       typingTimeoutRef.current = setTimeout(() => {
-        setTypingStatus(conversationId, false);
+        chatService.setTypingStatus(matchId, false);
       }, 2000);
     } else {
-      setTypingStatus(conversationId, false);
+      chatService.setTypingStatus(matchId, false);
     }
   };
 
-  const handleSend = () => {
-    if (inputText.trim()) {
-      sendMessage(conversationId, inputText.trim(), match.matchId);
-      setInputText('');
-      setTypingStatus(conversationId, false);
+  const handleSend = async () => {
+    if (!inputText.trim() || !matchId) {return;}
 
-      // Clear typing timeout
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
+    const text = inputText;
+    setInputText('');
+    chatService.setTypingStatus(matchId, false);
+
+    // Clear typing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    try {
+      await chatService.sendMessage(matchId, text);
+    } catch (error) {
+      console.error('Error enviando mensaje:', error);
     }
   };
 
-  const renderMessage = ({item}) => (
-    <View
-      style={[
-        styles.messageContainer,
-        item.sender === 'me' ? styles.myMessage : styles.theirMessage,
-      ]}>
-      {item.sender === 'them' && (
-        <Image source={{uri: match.photo}} style={styles.messageAvatar} />
-      )}
+  const formatTime = (date) => {
+    if (!date) {return '';}
+    if (typeof date.toLocaleTimeString === 'function') {
+      return date.toLocaleTimeString('es-CO', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+    return '';
+  };
+
+  const renderMessage = ({item}) => {
+    const isMe = item.senderId === user?.uid;
+
+    return (
       <View
         style={[
-          styles.messageBubble,
-          item.sender === 'me'
-            ? styles.myMessageBubble
-            : styles.theirMessageBubble,
+          styles.messageContainer,
+          isMe ? styles.myMessage : styles.theirMessage,
         ]}>
-        <Text
+        {!isMe && (
+          <Image source={{uri: otherUserPhoto}} style={styles.messageAvatar} />
+        )}
+        <View
           style={[
-            styles.messageText,
-            item.sender === 'me' && styles.myMessageText,
+            styles.messageBubble,
+            isMe ? styles.myMessageBubble : styles.theirMessageBubble,
           ]}>
-          {item.text}
-        </Text>
-        <Text
-          style={[
-            styles.timestamp,
-            item.sender === 'me' && styles.myTimestamp,
-          ]}>
-          {item.timestamp}
-        </Text>
+          {item.type === 'image' && item.image ? (
+            <Image source={{uri: item.image}} style={styles.messageImage} />
+          ) : (
+            <Text
+              style={[
+                styles.messageText,
+                isMe && styles.myMessageText,
+              ]}>
+              {item.text}
+            </Text>
+          )}
+          <Text
+            style={[
+              styles.timestamp,
+              isMe && styles.myTimestamp,
+            ]}>
+            {formatTime(item.createdAt)}
+          </Text>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -147,19 +177,15 @@ const ChatDetailScreen = ({route, navigation}) => {
           <Icon name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.avatarContainer}>
-          <Image source={{uri: match.photo}} style={styles.headerAvatar} />
-          {isOnline && <View style={styles.onlineIndicator} />}
+          <Image source={{uri: otherUserPhoto}} style={styles.headerAvatar} />
         </View>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerName}>{match.name}</Text>
+          <Text style={styles.headerName}>{otherUserName}</Text>
           <Text style={styles.statusText}>
-            {isTyping ? 'Escribiendo...' : isOnline ? 'En línea' : 'Desconectado'}
+            {isOtherTyping ? 'Escribiendo...' : ''}
           </Text>
         </View>
         <View style={styles.headerActions}>
-          {!isConnected && (
-            <Icon name="cloud-offline-outline" size={20} color={colors.error} style={{marginRight: spacing.sm}} />
-          )}
           <TouchableOpacity style={styles.headerButton}>
             <Icon name="videocam-outline" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -173,10 +199,26 @@ const ChatDetailScreen = ({route, navigation}) => {
         ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={item => item.id}
         contentContainerStyle={styles.messagesList}
         showsVerticalScrollIndicator={false}
+        inverted
+        ListEmptyComponent={
+          <View style={styles.emptyMessages}>
+            <Text style={styles.emptyMessagesText}>
+              ¡Di hola! Inicia la conversación 👋
+            </Text>
+          </View>
+        }
       />
+
+      {isOtherTyping && (
+        <View style={styles.typingContainer}>
+          <Text style={styles.typingText}>
+            {otherUserName} está escribiendo...
+          </Text>
+        </View>
+      )}
 
       <View style={styles.inputContainer}>
         <TouchableOpacity style={styles.attachButton}>
@@ -333,6 +375,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: spacing.sm,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+  },
+  emptyMessages: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: spacing.xxl,
+  },
+  emptyMessagesText: {
+    fontSize: fontSize.md,
+    color: colors.textLight,
+    textAlign: 'center',
+  },
+  typingContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
+  },
+  typingText: {
+    fontSize: fontSize.xs,
+    color: colors.textLight,
+    fontStyle: 'italic',
+  },
+  messageImage: {
+    width: 200,
+    height: 200,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.xs,
   },
 });
 

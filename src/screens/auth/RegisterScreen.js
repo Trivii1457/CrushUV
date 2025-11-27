@@ -14,6 +14,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import {colors, spacing, fontSize, fontWeight} from '../../theme';
 import {useAuth} from '../../context/AuthContext';
+import userService from '../../services/userService';
 
 const RegisterScreen = ({navigation}) => {
   const [name, setName] = useState('');
@@ -60,13 +61,25 @@ const RegisterScreen = ({navigation}) => {
 
     setLoading(true);
     const result = await signUp(email, password);
-    setLoading(false);
 
     if (result.success) {
-      // Send email verification
-      await sendEmailVerification();
-      navigation.navigate('EmailVerification', {email});
+      try {
+        // Create user profile in Firestore
+        await userService.createUser(result.user.uid, {
+          email,
+          name: name.trim(),
+        });
+
+        // Send email verification
+        await sendEmailVerification();
+        setLoading(false);
+        navigation.navigate('EmailVerification', {email});
+      } catch (error) {
+        setLoading(false);
+        Alert.alert('Error', 'No se pudo crear el perfil: ' + error.message);
+      }
     } else {
+      setLoading(false);
       Alert.alert('Error', result.error);
     }
   };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,55 +6,119 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {colors, spacing, fontSize, fontWeight} from '../../theme';
-import {useChat} from '../../context/ChatContext';
+import {useAuth} from '../../context/AuthContext';
+import chatService from '../../services/chatService';
 
 const ChatListScreen = ({navigation}) => {
-  const {conversations, isConnected} = useChat();
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const {user} = useAuth();
 
-  const renderChat = ({item}) => (
-    <TouchableOpacity
-      style={styles.chatItem}
-      onPress={() => navigation.navigate('ChatDetail', {match: item})}>
-      <View style={styles.avatarContainer}>
-        <Image source={{uri: item.photo}} style={styles.avatar} />
-        {item.online && <View style={styles.onlineIndicator} />}
-      </View>
+  useEffect(() => {
+    if (!user) {return;}
 
-      <View style={styles.chatContent}>
-        <View style={styles.chatHeader}>
-          <Text style={styles.chatName}>{item.name}</Text>
-          <Text style={styles.timestamp}>{item.timestamp}</Text>
+    // Subscribe to conversations in real-time
+    const unsubscribe = chatService.subscribeToConversations(
+      user.uid,
+      (convos) => {
+        setConversations(convos);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const getPhotoUri = (otherUser) => {
+    if (!otherUser) {return 'https://via.placeholder.com/60/CCCCCC/FFFFFF?text=?';}
+    if (otherUser.photos && otherUser.photos.length > 0) {
+      const photo = otherUser.photos[0];
+      if (photo.startsWith('/') || photo.startsWith('file://')) {
+        return `file://${photo.replace('file://', '')}`;
+      }
+      return photo;
+    }
+    return 'https://via.placeholder.com/60/CCCCCC/FFFFFF?text=?';
+  };
+
+  const formatTimestamp = (date) => {
+    if (!date) {return '';}
+    const now = new Date();
+    const diff = now - date;
+
+    if (diff < 60000) {return 'Ahora';}
+    if (diff < 3600000) {return `${Math.floor(diff / 60000)}m`;}
+    if (diff < 86400000) {return `${Math.floor(diff / 3600000)}h`;}
+    if (diff < 604800000) {return `${Math.floor(diff / 86400000)}d`;}
+
+    return date.toLocaleDateString();
+  };
+
+  const renderChat = ({item}) => {
+    const otherUser = item.otherUser;
+    const photoUri = getPhotoUri(otherUser);
+    const timestamp = formatTimestamp(item.lastMessageAt);
+    const unreadCount = item.unreadCount || 0;
+
+    return (
+      <TouchableOpacity
+        style={styles.chatItem}
+        onPress={() => navigation.navigate('ChatDetail', {
+          match: {
+            id: item.id,
+            matchId: item.id,
+            name: otherUser?.name || 'Usuario',
+            photo: photoUri,
+            otherUser,
+          },
+        })}>
+        <View style={styles.avatarContainer}>
+          <Image source={{uri: photoUri}} style={styles.avatar} />
+          {otherUser?.isOnline && <View style={styles.onlineIndicator} />}
         </View>
-        <View style={styles.messageContainer}>
-          <Text
-            style={[
-              styles.lastMessage,
-              item.unread > 0 && styles.unreadMessage,
-            ]}
-            numberOfLines={1}>
-            {item.lastMessage}
-          </Text>
-          {item.unread > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadCount}>{item.unread}</Text>
-            </View>
-          )}
+
+        <View style={styles.chatContent}>
+          <View style={styles.chatHeader}>
+            <Text style={styles.chatName}>{otherUser?.name || 'Usuario'}</Text>
+            <Text style={styles.timestamp}>{timestamp}</Text>
+          </View>
+          <View style={styles.messageContainer}>
+            <Text
+              style={[
+                styles.lastMessage,
+                unreadCount > 0 && styles.unreadMessage,
+              ]}
+              numberOfLines={1}>
+              {item.lastMessage || 'Sin mensajes aún'}
+            </Text>
+            {unreadCount > 0 && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadCount}>{unreadCount}</Text>
+              </View>
+            )}
+          </View>
         </View>
+      </TouchableOpacity>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
-    </TouchableOpacity>
-  );
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chats</Text>
         <View style={styles.headerActions}>
-          {!isConnected && (
-            <Icon name="cloud-offline-outline" size={20} color={colors.error} style={{marginRight: spacing.md}} />
-          )}
           <TouchableOpacity>
             <Icon name="search-outline" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -65,7 +129,7 @@ const ChatListScreen = ({navigation}) => {
         <FlatList
           data={conversations}
           renderItem={renderChat}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={item => item.id}
           contentContainerStyle={styles.chatsList}
           showsVerticalScrollIndicator={false}
         />
@@ -200,6 +264,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.textLight,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
   },
 });
 

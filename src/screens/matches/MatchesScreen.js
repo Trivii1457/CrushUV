@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,64 +6,105 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {colors, spacing, borderRadius, fontSize, fontWeight, shadows} from '../../theme';
+import {useAuth} from '../../context/AuthContext';
+import matchService from '../../services/matchService';
 
 const MatchesScreen = ({navigation}) => {
-  const matches = [
-    {
-      id: 1,
-      name: 'Ana María',
-      age: 21,
-      photo: 'https://via.placeholder.com/150/FF6B6B/FFFFFF?text=Ana',
-      isNew: true,
-      matchDate: '2024-01-15',
-    },
-    {
-      id: 2,
-      name: 'Carlos',
-      age: 23,
-      photo: 'https://via.placeholder.com/150/4ECDC4/FFFFFF?text=Carlos',
-      isNew: true,
-      matchDate: '2024-01-14',
-    },
-    {
-      id: 3,
-      name: 'Sofía',
-      age: 20,
-      photo: 'https://via.placeholder.com/150/95E1D3/FFFFFF?text=Sofia',
-      isNew: false,
-      matchDate: '2024-01-10',
-    },
-    {
-      id: 4,
-      name: 'Diego',
-      age: 22,
-      photo: 'https://via.placeholder.com/150/F38181/FFFFFF?text=Diego',
-      isNew: false,
-      matchDate: '2024-01-08',
-    },
-  ];
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const {user} = useAuth();
 
-  const renderMatch = ({item}) => (
-    <TouchableOpacity
-      style={styles.matchCard}
-      onPress={() => navigation.navigate('ChatDetail', {match: item})}>
-      <View style={styles.matchImageContainer}>
-        <Image source={{uri: item.photo}} style={styles.matchImage} />
-        {item.isNew && (
-          <View style={styles.newBadge}>
-            <Text style={styles.newBadgeText}>NUEVO</Text>
-          </View>
-        )}
+  useEffect(() => {
+    if (!user) {return;}
+
+    // Subscribe to matches in real-time
+    const unsubscribe = matchService.subscribeToMatches(user.uid, (matchesData) => {
+      setMatches(matchesData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const getPhotoUri = (otherUser) => {
+    if (!otherUser) {return null;}
+    if (otherUser.photos && otherUser.photos.length > 0) {
+      const photo = otherUser.photos[0];
+      // Check if it's a local path or URL
+      if (photo.startsWith('/') || photo.startsWith('file://')) {
+        return `file://${photo.replace('file://', '')}`;
+      }
+      return photo;
+    }
+    return 'https://via.placeholder.com/150/CCCCCC/FFFFFF?text=?';
+  };
+
+  const renderMatch = ({item}) => {
+    const otherUser = item.otherUser;
+    const photoUri = getPhotoUri(otherUser);
+    const age = otherUser?.age ||
+      (otherUser?.birthDate ? calculateAge(otherUser.birthDate) : '?');
+
+    // Check if match is new (less than 24 hours old and no messages)
+    const matchDate = item.createdAt instanceof Date ? item.createdAt : new Date();
+    const isNew = item.isNew && (new Date() - matchDate) < 24 * 60 * 60 * 1000;
+
+    return (
+      <TouchableOpacity
+        style={styles.matchCard}
+        onPress={() => navigation.navigate('ChatDetail', {
+          match: {
+            id: item.id,
+            matchId: item.id,
+            name: otherUser?.name || 'Usuario',
+            photo: photoUri,
+            otherUser,
+          },
+        })}>
+        <View style={styles.matchImageContainer}>
+          <Image
+            source={{uri: photoUri}}
+            style={styles.matchImage}
+          />
+          {isNew && (
+            <View style={styles.newBadge}>
+              <Text style={styles.newBadgeText}>NUEVO</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.matchName} numberOfLines={1}>
+          {otherUser?.name || 'Usuario'}
+        </Text>
+        <Text style={styles.matchAge}>{age} años</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const calculateAge = (birthDate) => {
+    if (!birthDate) {return '?';}
+    const parts = birthDate.split('/');
+    if (parts.length !== 3) {return '?';}
+    const birth = new Date(parts[2], parts[1] - 1, parts[0]);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
-      <Text style={styles.matchName} numberOfLines={1}>
-        {item.name}
-      </Text>
-      <Text style={styles.matchAge}>{item.age} años</Text>
-    </TouchableOpacity>
-  );
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -78,7 +119,7 @@ const MatchesScreen = ({navigation}) => {
         <FlatList
           data={matches}
           renderItem={renderMatch}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={item => item.id}
           numColumns={2}
           contentContainerStyle={styles.matchesList}
           columnWrapperStyle={styles.row}
@@ -179,6 +220,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.textLight,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
   },
 });
 

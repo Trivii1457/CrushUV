@@ -67,7 +67,7 @@ const MainTabs = () => {
 };
 
 const AppNavigator = () => {
-  const {isAuthenticated, loading} = useAuth();
+  const {isAuthenticated, isProfileComplete, loading} = useAuth();
 
   // Show loading screen while checking auth state
   if (loading) {
@@ -89,6 +89,10 @@ const AppNavigator = () => {
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
+        </>
+      ) : !isProfileComplete ? (
+        // Profile Creation Stack
+        <>
           <Stack.Screen name="CreateProfile" component={CreateProfileScreen} />
         </>
       ) : (

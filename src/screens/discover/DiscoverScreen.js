@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   Text,
@@ -7,49 +7,75 @@ import {
   Dimensions,
   Animated,
   PanResponder,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import ProfileCard from '../../components/ProfileCard';
 import {colors, spacing, shadows} from '../../theme';
+import {useAuth} from '../../context/AuthContext';
+import userService from '../../services/userService';
+import matchService from '../../services/matchService';
 
 const {width, height} = Dimensions.get('window');
 
 const DiscoverScreen = () => {
-  const [profiles] = useState([
-    {
-      id: 1,
-      name: 'Ana María',
-      age: 21,
-      career: 'Psicología',
-      semester: '6',
-      bio: 'Amante de los libros y el arte. Busco conversaciones interesantes 📚🎨',
-      photos: ['https://via.placeholder.com/400x600/FF6B6B/FFFFFF?text=Ana'],
-      distance: 0.5,
-    },
-    {
-      id: 2,
-      name: 'Carlos',
-      age: 23,
-      career: 'Ingeniería Industrial',
-      semester: '8',
-      bio: 'Fanático del fútbol y la música. Siempre listo para una aventura ⚽🎵',
-      photos: ['https://via.placeholder.com/400x600/4ECDC4/FFFFFF?text=Carlos'],
-      distance: 1.2,
-    },
-    {
-      id: 3,
-      name: 'Sofía',
-      age: 20,
-      career: 'Diseño Gráfico',
-      semester: '4',
-      bio: 'Creativa y soñadora. Me encanta el café y las buenas películas ☕🎬',
-      photos: ['https://via.placeholder.com/400x600/95E1D3/FFFFFF?text=Sofia'],
-      distance: 0.8,
-    },
-  ]);
-
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const {user} = useAuth();
   const position = useRef(new Animated.ValueXY()).current;
+
+  // Load profiles from Firestore
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      if (!user) {return;}
+
+      setLoading(true);
+      try {
+        const discoverProfiles = await userService.getDiscoverProfiles(user.uid, 20);
+
+        // Transform profiles for display
+        const transformedProfiles = discoverProfiles.map(profile => ({
+          id: profile.id || profile.uid,
+          uid: profile.uid,
+          name: profile.name || 'Usuario',
+          age: profile.age || calculateAge(profile.birthDate) || '?',
+          career: profile.career || '',
+          semester: profile.semester || '',
+          bio: profile.bio || '',
+          photos: profile.photos || [],
+          distance: 0.5, // Default distance (could calculate if location available)
+        }));
+
+        setProfiles(transformedProfiles);
+        setCurrentIndex(0);
+      } catch (error) {
+        console.error('Error loading profiles:', error);
+        Alert.alert('Error', 'No se pudieron cargar los perfiles');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfiles();
+
+  }, [user]);
+
+  const calculateAge = (birthDate) => {
+    if (!birthDate) {return null;}
+    const parts = birthDate.split('/');
+    if (parts.length !== 3) {return null;}
+    const birth = new Date(parts[2], parts[1] - 1, parts[0]);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const rotate = position.x.interpolate({
     inputRange: [-width / 2, 0, width / 2],
     outputRange: ['-10deg', '0deg', '10deg'],
@@ -67,6 +93,31 @@ const DiscoverScreen = () => {
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
+
+  // Record swipe in Firestore
+  const recordSwipe = async (direction) => {
+    if (!user || currentIndex >= profiles.length) {return;}
+
+    const swipedProfile = profiles[currentIndex];
+    try {
+      const result = await matchService.recordSwipe(
+        user.uid,
+        swipedProfile.uid,
+        direction
+      );
+
+      if (result.isMatch) {
+        // Show match alert
+        Alert.alert(
+          '¡Es un Match! 💕',
+          `¡Tú y ${swipedProfile.name} se gustan!`,
+          [{text: 'Enviar mensaje', onPress: () => {}}, {text: 'Seguir explorando'}]
+        );
+      }
+    } catch (error) {
+      console.error('Error recording swipe:', error);
+    }
+  };
 
   const panResponder = useRef(
     PanResponder.create({
@@ -90,6 +141,7 @@ const DiscoverScreen = () => {
   ).current;
 
   const handleSwipeRight = () => {
+    recordSwipe('right');
     Animated.timing(position, {
       toValue: {x: width + 100, y: 0},
       duration: 250,
@@ -101,6 +153,7 @@ const DiscoverScreen = () => {
   };
 
   const handleSwipeLeft = () => {
+    recordSwipe('left');
     Animated.timing(position, {
       toValue: {x: -width - 100, y: 0},
       duration: 250,
@@ -112,6 +165,7 @@ const DiscoverScreen = () => {
   };
 
   const handleSuperLike = () => {
+    recordSwipe('right'); // Super like is also a right swipe
     Animated.timing(position, {
       toValue: {x: 0, y: -height},
       duration: 250,
@@ -121,6 +175,17 @@ const DiscoverScreen = () => {
       position.setValue({x: 0, y: 0});
     });
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Buscando perfiles...</Text>
+        </View>
+      </View>
+    );
+  }
 
   if (currentIndex >= profiles.length) {
     return (
@@ -313,6 +378,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textLight,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: spacing.md,
+    fontSize: 16,
+    color: colors.textLight,
   },
 });
 

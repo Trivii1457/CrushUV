@@ -1,23 +1,60 @@
 import React, {createContext, useState, useEffect, useContext} from 'react';
 import auth from '@react-native-firebase/auth';
+import userService from '../services/userService';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({children}) => {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isProfileComplete, setIsProfileComplete] = useState(false);
 
   // Listen to auth state changes
   useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged(firebaseUser => {
+    const unsubscribe = auth().onAuthStateChanged(async firebaseUser => {
       setUser(firebaseUser);
       setIsAuthenticated(!!firebaseUser);
+
+      if (firebaseUser) {
+        // Fetch user profile from Firestore
+        const userProfile = await userService.getUser(firebaseUser.uid);
+        setProfile(userProfile);
+        setIsProfileComplete(userProfile?.isProfileComplete === true);
+      } else {
+        setProfile(null);
+        setIsProfileComplete(false);
+      }
+
       setLoading(false);
     });
 
     return unsubscribe;
   }, []);
+
+  /**
+   * Refresh user profile from Firestore
+   */
+  const refreshProfile = async () => {
+    if (user) {
+      const userProfile = await userService.getUser(user.uid);
+      setProfile(userProfile);
+      setIsProfileComplete(userProfile?.isProfileComplete === true);
+      return userProfile;
+    }
+    return null;
+  };
+
+  /**
+   * Update user profile
+   */
+  const updateProfile = async (data) => {
+    if (!user) {throw new Error('No hay usuario autenticado');}
+
+    await userService.updateUser(user.uid, data);
+    await refreshProfile();
+  };
 
   /**
    * Sign in with email and password
@@ -132,13 +169,17 @@ export const AuthProvider = ({children}) => {
 
   const value = {
     user,
+    profile,
     loading,
     isAuthenticated,
+    isProfileComplete,
     signIn,
     signUp,
     signOut,
     resetPassword,
     sendEmailVerification,
+    refreshProfile,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

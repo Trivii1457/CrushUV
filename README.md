@@ -1,115 +1,310 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 💕 CrushUV - React Native
 
-# CrushUV
+<div align="center">
+  <img src="https://img.shields.io/badge/Platform-iOS%20%7C%20Android-green.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/Framework-React%20Native-blue.svg" alt="Framework">
+  <img src="https://img.shields.io/badge/University-Universidad%20del%20Valle-red.svg" alt="University">
+  <img src="https://img.shields.io/badge/Status-Prototipo-yellow.svg" alt="Status">
+</div>
 
-Una aplicación de citas para estudiantes de Univalle, construida con React Native y Firebase.
+## 📱 Descripción
 
-## Configuración de Firebase
+**CrushUV** es una aplicación móvil de citas diseñada específicamente para la comunidad estudiantil de la **Universidad del Valle**. Este repositorio contiene el prototipo completo desarrollado en **React Native**, permitiendo que la aplicación funcione tanto en iOS como en Android.
 
-La aplicación utiliza Firebase para autenticación y base de datos en tiempo real. Para configurar Firebase:
+La aplicación permite a los estudiantes conectarse, conocerse y formar relaciones significativas dentro del campus universitario, promoviendo un ambiente seguro y exclusivo para la comunidad Univalluna.
 
-### 1. Configuración de Android
+## ✨ Características Implementadas
 
-1. Ve a la [Consola de Firebase](https://console.firebase.google.com/)
-2. Crea un nuevo proyecto o usa el existente
-3. Agrega una app de Android con el package name `com.crushuv`
-4. Descarga el archivo `google-services.json`
-5. Coloca el archivo en `android/app/google-services.json`
+### Autenticación
+- 🔐 **Pantalla de Inicio de Sesión**: Login con correo institucional
+- 📝 **Registro de Usuario**: Creación de cuenta con validación de correo @correounivalle.edu.co
+- ✉️ **Verificación de Email**: Confirmación de cuenta mediante correo electrónico
 
-### 2. Configuración de iOS (opcional)
+### Perfil de Usuario
+- 👤 **Creación de Perfil**: Formulario completo con fotos, información académica y biografía
+- ✏️ **Edición de Perfil**: Actualización de información personal, fotos e intereses
+- 📊 **Visualización de Perfil**: Vista detallada con estadísticas (matches, likes, super likes)
 
-1. En la consola de Firebase, agrega una app de iOS
-2. Descarga el archivo `GoogleService-Info.plist`
-3. Agrega el archivo a tu proyecto de Xcode en `ios/CrushUVNew/`
+### Descubrimiento
+- 🔥 **Swipe Cards**: Sistema de deslizamiento para explorar perfiles
+- ❤️ **Sistema de Me Gusta**: Like, Nope y Super Like
+- 🎯 **Filtros**: Búsqueda por carrera, semestre y distancia
+- 📍 **Ubicación**: Muestra distancia al campus
 
-### 3. Habilitar servicios en Firebase
+### Matches y Chat
+- 💝 **Lista de Matches**: Visualización de todas las coincidencias
+- 💬 **Chat en Tiempo Real**: Mensajería instantánea con matches
+- 🟢 **Estado Online**: Indicador de usuarios conectados
+- 📱 **Notificaciones**: Badges de mensajes no leídos
 
-Asegúrate de tener habilitados los siguientes servicios:
-- **Authentication**: Habilita el proveedor de Email/Password
-- **Realtime Database** o **Firestore**: Para almacenar mensajes y datos de usuarios
+### Configuración
+- ⚙️ **Ajustes de Cuenta**: Gestión de información personal
+- 🔒 **Privacidad**: Control de visibilidad y preferencias
+- 🔔 **Notificaciones**: Configuración de alertas
+- 📋 **Términos y Condiciones**: Información legal
 
-## Iconos
+## 🛠️ Tecnologías Utilizadas
 
-La aplicación utiliza [react-native-vector-icons](https://github.com/oblador/react-native-vector-icons) con la familia de iconos **Ionicons**. Los iconos están integrados en toda la aplicación para mejorar la experiencia de usuario.
+- **Framework**: React Native 0.72.6
+- **Navegación**: React Navigation v6
+- **Gestión de Estado**: React Hooks
+- **UI Components**: 
+  - React Native Vector Icons
+  - React Native Linear Gradient
+  - React Native Gesture Handler
+  - React Native Reanimated
+- **Almacenamiento**: AsyncStorage
+- **Imágenes**: React Native Image Picker
 
-Para explorar los iconos disponibles, visita:
-- [Ionicons](https://ionic.io/ionicons)
-- [React Native Vector Icons Directory](https://oblador.github.io/react-native-vector-icons/)
+## 📋 Requisitos del Sistema
 
-# Getting Started
+### Para Desarrollo
+- Node.js >= 16
+- npm o yarn
+- React Native CLI
+- Android Studio (para Android) o Xcode (para iOS)
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+### Para la Aplicación
+- iOS 12.0+ o Android 7.0+ (API 24+)
+- 4GB de RAM mínimo
+- 500MB de espacio disponible
+- Conexión a internet
 
-## Step 1: Start the Metro Server
+## 🚀 Instalación y Configuración
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
-
-To start Metro, run the following command from the _root_ of your React Native project:
+### 1. Clonar el Repositorio
 
 ```bash
-# using npm
-npm start
-
-# OR using Yarn
-yarn start
+git clone https://github.com/Trivii1457/CrushUV.git
+cd CrushUV
 ```
 
-## Step 2: Start your Application
-
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
-
-### For Android
+### 2. Instalar Dependencias
 
 ```bash
-# using npm
-npm run android
+npm install
+# o
+yarn install
+```
 
-# OR using Yarn
+### 3. Configuración iOS (Solo macOS)
+
+```bash
+cd ios
+pod install
+cd ..
+```
+
+### 4. Ejecutar la Aplicación
+
+#### Android
+```bash
+npm run android
+# o
 yarn android
 ```
 
-### For iOS
-
+#### iOS
 ```bash
-# using npm
 npm run ios
-
-# OR using Yarn
+# o
 yarn ios
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+### 5. Iniciar Metro Bundler
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+```bash
+npm start
+# o
+yarn start
+```
 
-## Step 3: Modifying your App
+## 📁 Estructura del Proyecto
 
-Now that you have successfully run the app, let's modify it.
+```
+CrushUV/
+├── src/
+│   ├── App.js                    # Componente principal
+│   ├── components/               # Componentes reutilizables
+│   │   ├── Button.js            # Botón personalizado
+│   │   ├── Input.js             # Input de texto personalizado
+│   │   └── ProfileCard.js       # Tarjeta de perfil para swipe
+│   ├── navigation/              # Configuración de navegación
+│   │   └── AppNavigator.js      # Navegador principal
+│   ├── screens/                 # Pantallas de la aplicación
+│   │   ├── auth/               # Autenticación
+│   │   │   ├── LoginScreen.js
+│   │   │   ├── RegisterScreen.js
+│   │   │   └── EmailVerificationScreen.js
+│   │   ├── profile/            # Gestión de perfil
+│   │   │   ├── ProfileScreen.js
+│   │   │   ├── EditProfileScreen.js
+│   │   │   └── CreateProfileScreen.js
+│   │   ├── discover/           # Descubrimiento
+│   │   │   └── DiscoverScreen.js
+│   │   ├── matches/            # Matches
+│   │   │   └── MatchesScreen.js
+│   │   ├── chat/               # Chat
+│   │   │   ├── ChatListScreen.js
+│   │   │   └── ChatDetailScreen.js
+│   │   └── settings/           # Configuración
+│   │       └── SettingsScreen.js
+│   ├── theme/                  # Configuración de tema
+│   │   └── index.js            # Colores, espaciados, fuentes
+│   ├── utils/                  # Utilidades
+│   └── assets/                 # Recursos (imágenes, fuentes)
+├── android/                    # Configuración Android
+├── ios/                        # Configuración iOS
+├── index.js                    # Punto de entrada
+├── app.json                    # Configuración de la app
+├── package.json                # Dependencias
+├── babel.config.js             # Configuración Babel
+├── metro.config.js             # Configuración Metro
+└── README.md                   # Este archivo
+```
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+## 🎯 Uso de la Aplicación
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+### Flujo de Usuario
 
-## Congratulations! :tada:
+1. **Registro e Inicio de Sesión**
+   - Abre la aplicación
+   - Regístrate con tu correo @correounivalle.edu.co
+   - Verifica tu correo
+   - Completa tu perfil con fotos e información
 
-You've successfully run and modified your React Native App. :partying_face:
+2. **Descubrimiento de Perfiles**
+   - Explora perfiles deslizando hacia la derecha (me gusta) o izquierda (no me gusta)
+   - Desliza hacia arriba para dar un Super Like
+   - Usa los botones inferiores para las mismas acciones
 
-### Now what?
+3. **Matches y Chat**
+   - Cuando ambos se den "me gusta", recibirás un match
+   - Accede a tus matches desde la pestaña de corazón
+   - Inicia conversaciones desde la pestaña de chat
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+4. **Gestión de Perfil**
+   - Edita tu perfil desde la pestaña de perfil
+   - Añade o elimina fotos
+   - Actualiza tu biografía e intereses
+   - Configura preferencias desde Ajustes
 
-# Troubleshooting
+## 🎨 Características de Diseño
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+### Paleta de Colores
+- **Primary**: #FF4458 (Rojo vibrante)
+- **Secondary**: #FE3C72 (Rosa intenso)
+- **Accent**: #FF6B6B (Coral)
+- **Background**: #FFFFFF (Blanco)
+- **Surface**: #F8F8F8 (Gris muy claro)
 
-# Learn More
+### Componentes Personalizados
+- **Button**: Botón con gradiente y estados de carga
+- **Input**: Campo de texto con iconos y validación
+- **ProfileCard**: Tarjeta de perfil con información y fotos
 
-To learn more about React Native, take a look at the following resources:
+### Animaciones
+- Swipe cards con gestos nativos
+- Transiciones suaves entre pantallas
+- Indicadores de estado (online, mensajes no leídos)
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## 📸 Capturas de Pantalla
+
+| Login | Descubrimiento | Matches | Chat |
+|:-----:|:-------------:|:-------:|:----:|
+| ![Login](docs/screenshots/login.png) | ![Discover](docs/screenshots/discover.png) | ![Matches](docs/screenshots/matches.png) | ![Chat](docs/screenshots/chat.png) |
+
+*Las capturas de pantalla se encuentran en desarrollo*
+
+## 🔄 Próximas Implementaciones
+
+
+- [ ] Sistema de notificaciones push
+- [ ] Sistema de reportes y bloqueos
+- [ ] Filtros avanzados de búsqueda
+- [ ] Sistema de verificación de perfil
+- [ ] Modo oscuro
+- [ ] Internacionalización (i18n)
+- [ ] Tests unitarios y de integración
+
+## 🧪 Testing
+
+```bash
+# Ejecutar tests
+npm test
+
+# Ejecutar tests con cobertura
+npm test -- --coverage
+
+# Ejecutar linter
+npm run lint
+```
+
+## 🤝 Contribución
+
+Las contribuciones son bienvenidas. Para contribuir:
+
+1. Fork el repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+### Guías de Desarrollo
+
+- Sigue las convenciones de código de React/JavaScript
+- Usa componentes funcionales y hooks
+- Mantén los componentes pequeños y reutilizables
+- Comenta código complejo
+- Escribe tests para nuevas funcionalidades
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
+
+## 👥 Equipo de Desarrollo
+
+- **Desarrollador Principal**: [Trivii1457](https://github.com/Trivii1457)
+- **Universidad**: Universidad del Valle
+- **Contacto**: crushuv@correounivalle.edu.co
+
+## 🏫 Universidad del Valle
+
+<div align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Escudo_de_la_Universidad_del_Valle.svg/200px-Escudo_de_la_Universidad_del_Valle.svg.png" alt="Universidad del Valle" width="100">
+</div>
+
+**CrushUV** es un proyecto estudiantil desarrollado para la comunidad de la Universidad del Valle, ubicada en Tuluá, Colombia. La aplicación busca fortalecer los vínculos sociales dentro del campus y promover conexiones significativas entre estudiantes.
+
+## 📞 Soporte
+
+- **Issues**: [GitHub Issues](https://github.com/Trivii1457/CrushUV/issues)
+- **Email**: crushuv@correounivalle.edu.co
+- **Documentación**: [Wiki del proyecto](https://github.com/Trivii1457/CrushUV/wiki)
+
+## 🎉 Agradecimientos
+
+- Universidad del Valle por el apoyo institucional
+- Comunidad estudiantil por el feedback
+- Comunidad de React Native por las herramientas de código abierto
+
+## 📝 Notas del Prototipo
+
+Este es un prototipo funcional que incluye:
+- ✅ Todas las pantallas principales
+- ✅ Navegación completa entre pantallas
+- ✅ Componentes reutilizables personalizados
+- ✅ Diseño responsive y moderno
+- ✅ Animaciones y transiciones
+- ✅ Tema de colores personalizado
+- ✅ Estructura de código escalable
+- ✅ Chat en tiempo real
+
+
+
+---
+
+<div align="center">
+  <p><strong>Hecho con ❤️ por estudiantes, para estudiantes de Univalle</strong></p>
+  <p>© 2025 CrushUV - Universidad del Valle</p>
+</div>

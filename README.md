@@ -1,4 +1,4 @@
-# 💕 CrushUV - React Native
+# 💕 CrushUV 
 
 <div align="center">
   <img src="https://img.shields.io/badge/Platform-iOS%20%7C%20Android-green.svg" alt="Platform">

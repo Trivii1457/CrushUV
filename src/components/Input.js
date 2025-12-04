@@ -1,7 +1,27 @@
-import React from 'react';
-import {View, TextInput, Text, StyleSheet} from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import React, {useState} from 'react';
+import {View, TextInput, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
 import {colors, spacing, borderRadius, fontSize} from '../theme';
+
+// Importar imágenes de ojo
+import OjoAbierto from '../assets/images/ojo.png';
+import OjoCerrado from '../assets/images/ojo_cerrado.png';
+
+// Mapeo de iconos a emojis
+const iconToEmoji = {
+  'mail-outline': '📧',
+  'lock-closed-outline': '🔒',
+  'person-outline': '👤',
+  'school-outline': '🎓',
+  'book-outline': '📚',
+  'calendar-outline': '📅',
+  'search-outline': '🔍',
+  'location-outline': '📍',
+  'heart-outline': '💕',
+  'call-outline': '📞',
+  'chatbubble-outline': '💬',
+  'settings-outline': '⚙️',
+  'create-outline': '✏️',
+};
 
 const Input = ({
   label,
@@ -18,17 +38,15 @@ const Input = ({
   style,
   ...props
 }) => {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const isPassword = secureTextEntry;
+
   return (
     <View style={[styles.container, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
       <View style={[styles.inputContainer, error && styles.inputError]}>
         {iconName && (
-          <Icon
-            name={iconName}
-            size={20}
-            color={colors.textLight}
-            style={styles.icon}
-          />
+          <Text style={styles.icon}>{iconToEmoji[iconName] || '📝'}</Text>
         )}
         <TextInput
           style={[
@@ -40,13 +58,24 @@ const Input = ({
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor={colors.textLight}
-          secureTextEntry={secureTextEntry}
+          secureTextEntry={isPassword && !isPasswordVisible}
           multiline={multiline}
           numberOfLines={numberOfLines}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           {...props}
         />
+        {isPassword && (
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
+            <Image 
+              source={isPasswordVisible ? OjoAbierto : OjoCerrado} 
+              style={styles.eyeIcon} 
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        )}
       </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
@@ -77,6 +106,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginRight: spacing.sm,
+    fontSize: 18,
   },
   input: {
     flex: 1,
@@ -96,6 +126,15 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     color: colors.error,
     marginTop: spacing.xs,
+  },
+  eyeButton: {
+    padding: spacing.sm,
+    marginLeft: spacing.xs,
+  },
+  eyeIcon: {
+    width: 24,
+    height: 24,
+    tintColor: colors.textLight,
   },
 });
 

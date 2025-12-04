@@ -25,28 +25,30 @@ import {useAuth} from '../context/AuthContext';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const getTabBarIcon = (routeName, focused, color, size) => {
-  let iconName;
+import {Text} from 'react-native';
+
+const getTabBarIcon = (routeName, focused) => {
+  let emoji;
 
   if (routeName === 'Discover') {
-    iconName = focused ? 'flame' : 'flame-outline';
+    emoji = '🔥';
   } else if (routeName === 'Matches') {
-    iconName = focused ? 'heart' : 'heart-outline';
+    emoji = '💕';
   } else if (routeName === 'Chat') {
-    iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+    emoji = '💬';
   } else if (routeName === 'Profile') {
-    iconName = focused ? 'person' : 'person-outline';
+    emoji = '👤';
   }
 
-  return <Icon name={iconName} size={size} color={color} />;
+  return <Text style={{fontSize: focused ? 26 : 22, opacity: focused ? 1 : 0.6}}>{emoji}</Text>;
 };
 
 const MainTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({
-        tabBarIcon: ({focused, color, size}) =>
-          getTabBarIcon(route.name, focused, color, size),
+        tabBarIcon: ({focused}) =>
+          getTabBarIcon(route.name, focused),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textLight,
         headerShown: false,

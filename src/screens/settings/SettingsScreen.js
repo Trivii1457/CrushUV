@@ -8,9 +8,28 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 import {colors, spacing, borderRadius, fontSize, fontWeight} from '../../theme';
 import {useAuth} from '../../context/AuthContext';
+
+// Mapeo de iconos a emojis
+const iconToEmoji = {
+  'person-outline': '👤',
+  'key-outline': '🔑',
+  'shield-checkmark-outline': '✅',
+  'notifications-outline': '🔔',
+  'eye-outline': '👁️',
+  'location-outline': '📍',
+  'lock-closed-outline': '🔒',
+  'filter-outline': '📋',
+  'navigate-outline': '🧭',
+  'help-circle-outline': '❓',
+  'document-text-outline': '📄',
+  'shield-outline': '🛡️',
+  'information-circle-outline': 'ℹ️',
+  'log-out-outline': '🚪',
+  'chevron-forward': '▶️',
+  'arrow-back': '⬅️',
+};
 
 const SettingItem = ({
   icon,
@@ -26,7 +45,7 @@ const SettingItem = ({
     disabled={!onPress}>
     <View style={styles.settingLeft}>
       <View style={styles.iconContainer}>
-        <Icon name={icon} size={24} color={colors.primary} />
+        <Text style={styles.settingEmoji}>{iconToEmoji[icon] || '⚙️'}</Text>
       </View>
       <View style={styles.settingText}>
         <Text style={styles.settingTitle}>{title}</Text>
@@ -34,7 +53,7 @@ const SettingItem = ({
       </View>
     </View>
     {rightComponent || (showArrow && (
-      <Icon name="chevron-forward" size={20} color={colors.textLight} />
+      <Text style={styles.arrowEmoji}>▶️</Text>
     ))}
   </TouchableOpacity>
 );
@@ -89,7 +108,7 @@ const SettingsScreen = ({navigation}) => {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={colors.text} />
+          <Text style={styles.backEmoji}>⬅️</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Configuración</Text>
         <View style={styles.placeholder} />
@@ -214,7 +233,7 @@ const SettingsScreen = ({navigation}) => {
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Icon name="log-out-outline" size={24} color={colors.error} />
+          <Text style={styles.logoutEmoji}>🚪</Text>
           <Text style={styles.logoutText}>Cerrar Sesión</Text>
         </TouchableOpacity>
 
@@ -243,6 +262,9 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: spacing.xs,
+  },
+  backEmoji: {
+    fontSize: 24,
   },
   headerTitle: {
     fontSize: fontSize.lg,
@@ -333,6 +355,15 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textLight,
     textDecorationLine: 'underline',
+  },
+  settingEmoji: {
+    fontSize: 22,
+  },
+  arrowEmoji: {
+    fontSize: 14,
+  },
+  logoutEmoji: {
+    fontSize: 22,
   },
 });
 

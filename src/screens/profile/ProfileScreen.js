@@ -121,7 +121,7 @@ const ProfileScreen = ({navigation}) => {
               </Text>
               {(career || semester) && (
                 <View style={styles.academicInfo}>
-                  <Icon name="school" size={18} color={colors.white} />
+                  <Text style={styles.schoolEmoji}>🎓</Text>
                   <Text style={styles.academicText}>
                     {career}{semester ? ` - ${semester} semestre` : ''}
                   </Text>
@@ -133,13 +133,13 @@ const ProfileScreen = ({navigation}) => {
           <TouchableOpacity
             style={styles.settingsButton}
             onPress={() => navigation.navigate('Settings')}>
-            <Icon name="settings-outline" size={24} color={colors.white} />
+            <Text style={styles.buttonEmoji}>⚙️</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.editButton}
             onPress={() => navigation.navigate('EditProfile')}>
-            <Icon name="create-outline" size={24} color={colors.white} />
+            <Text style={styles.buttonEmoji}>✏️</Text>
           </TouchableOpacity>
         </View>
 
@@ -153,13 +153,13 @@ const ProfileScreen = ({navigation}) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sobre mí</Text>
+          <Text style={styles.sectionTitle}>📝 Sobre mí</Text>
           <Text style={styles.bio}>{bio}</Text>
         </View>
 
         {interests.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Intereses</Text>
+            <Text style={styles.sectionTitle}>✨ Intereses</Text>
             <View style={styles.interestsContainer}>
               {interests.map((interest, index) => (
                 <View key={index} style={styles.interestTag}>
@@ -171,7 +171,7 @@ const ProfileScreen = ({navigation}) => {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mis fotos</Text>
+          <Text style={styles.sectionTitle}>📸 Mis fotos</Text>
           <View style={styles.photosGrid}>
             {photos.length > 0 ? (
               photos.map((photo, index) => (
@@ -340,6 +340,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: '100%',
     paddingVertical: spacing.lg,
+  },
+  buttonEmoji: {
+    fontSize: 22,
+  },
+  schoolEmoji: {
+    fontSize: 18,
   },
 });
 

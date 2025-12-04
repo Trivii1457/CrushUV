@@ -117,10 +117,10 @@ const ChatListScreen = ({navigation}) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Chats</Text>
+        <Text style={styles.headerTitle}>💬 Chats</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity>
-            <Icon name="search-outline" size={24} color={colors.text} />
+            <Text style={styles.searchEmoji}>🔍</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -135,10 +135,10 @@ const ChatListScreen = ({navigation}) => {
         />
       ) : (
         <View style={styles.emptyState}>
-          <Icon name="chatbubbles-outline" size={80} color={colors.textLight} />
+          <Text style={styles.emptyEmoji}>💭</Text>
           <Text style={styles.emptyTitle}>No tienes conversaciones</Text>
           <Text style={styles.emptyDescription}>
-            Cuando hagas match con alguien, podrás empezar a chatear aquí
+            Cuando hagas match con alguien, podrás empezar a chatear aquí 😊
           </Text>
         </View>
       )}
@@ -264,6 +264,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.textLight,
     textAlign: 'center',
+  },
+  emptyEmoji: {
+    fontSize: 80,
+  },
+  searchEmoji: {
+    fontSize: 24,
   },
   loadingContainer: {
     flex: 1,

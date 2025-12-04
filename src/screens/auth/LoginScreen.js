@@ -8,13 +8,14 @@ import {
   Platform,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/Ionicons';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import {colors, spacing, borderRadius, fontSize, fontWeight} from '../../theme';
 import {useAuth} from '../../context/AuthContext';
+import Logo from '../../assets/images/Logo.png';
 
 const LoginScreen = ({navigation}) => {
   const [email, setEmail] = useState('');
@@ -78,16 +79,20 @@ const LoginScreen = ({navigation}) => {
       <LinearGradient
         colors={[colors.gradientStart, colors.gradientEnd]}
         style={styles.header}>
-        <Icon name="heart" size={80} color={colors.white} />
-        <Text style={styles.title}>CrushUV</Text>
-        <Text style={styles.subtitle}>Encuentra tu crush en Univalle</Text>
+        <View style={styles.logoContainer}>
+          <View style={styles.logoBackground}>
+            <Image source={Logo} style={styles.logo} resizeMode="contain" />
+          </View>
+        </View>
+        <Text style={styles.appName}>CrushUV</Text>
+        <Text style={styles.subtitle}>Encuentra tu crush en Univalle 🎓</Text>
       </LinearGradient>
 
       <ScrollView
         style={styles.formContainer}
         contentContainerStyle={styles.formContent}
         showsVerticalScrollIndicator={false}>
-        <Text style={styles.welcomeText}>Bienvenido de nuevo</Text>
+        <Text style={styles.welcomeText}>Bienvenido de nuevo 👋</Text>
         <Text style={styles.descriptionText}>
           Ingresa con tu correo institucional
         </Text>
@@ -159,16 +164,41 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: spacing.xxl * 2,
+    paddingTop: spacing.xxl * 1.5,
     paddingBottom: spacing.xxl,
-    borderBottomLeftRadius: borderRadius.xl,
-    borderBottomRightRadius: borderRadius.xl,
+    borderBottomLeftRadius: borderRadius.xl * 2,
+    borderBottomRightRadius: borderRadius.xl * 2,
   },
-  title: {
-    fontSize: fontSize.xxxl,
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  logoBackground: {
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  logo: {
+    width: 110,
+    height: 110,
+  },
+  appName: {
+    fontSize: fontSize.xxl,
     fontWeight: fontWeight.bold,
     color: colors.white,
-    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: {width: 0, height: 2},
+    textShadowRadius: 4,
   },
   subtitle: {
     fontSize: fontSize.md,

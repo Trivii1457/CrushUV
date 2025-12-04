@@ -92,7 +92,7 @@ const RegisterScreen = ({navigation}) => {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={colors.text} />
+          <Text style={styles.backEmoji}>⬅️</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Crear Cuenta</Text>
       </View>
@@ -102,7 +102,7 @@ const RegisterScreen = ({navigation}) => {
         contentContainerStyle={styles.formContent}
         showsVerticalScrollIndicator={false}>
         <Text style={styles.descriptionText}>
-          Únete a la comunidad de estudiantes de Univalle
+          Únete a la comunidad de estudiantes de Univalle 🎓💕
         </Text>
 
         <Input
@@ -168,11 +168,7 @@ const RegisterScreen = ({navigation}) => {
         <TouchableOpacity
           style={styles.termsContainer}
           onPress={() => setAcceptedTerms(!acceptedTerms)}>
-          <Icon
-            name={acceptedTerms ? 'checkbox' : 'square-outline'}
-            size={24}
-            color={acceptedTerms ? colors.primary : colors.textLight}
-          />
+          <Text style={styles.checkboxEmoji}>{acceptedTerms ? '✅' : '⬜'}</Text>
           <Text style={styles.termsText}>
             Acepto los{' '}
             <Text style={styles.termsLink}>Términos y Condiciones</Text> y la{' '}
@@ -213,6 +209,12 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginRight: spacing.md,
+  },
+  backEmoji: {
+    fontSize: 24,
+  },
+  checkboxEmoji: {
+    fontSize: 22,
   },
   title: {
     fontSize: fontSize.xl,

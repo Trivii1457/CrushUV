@@ -1,4 +1,4 @@
-import React, {createContext, useState, useEffect, useContext} from 'react';
+import React, {createContext, useState, useEffect, useContext, useRef} from 'react';
 import auth from '@react-native-firebase/auth';
 import userService from '../services/userService';
 
@@ -10,6 +10,27 @@ export const AuthProvider = ({children}) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isProfileComplete, setIsProfileComplete] = useState(false);
+  const isFirstLoad = useRef(true);
+
+  // Cerrar sesión al iniciar la app
+  useEffect(() => {
+    const closeSessionOnStart = async () => {
+      if (isFirstLoad.current) {
+        isFirstLoad.current = false;
+        try {
+          // Cerrar cualquier sesión existente al iniciar
+          if (auth().currentUser) {
+            await auth().signOut();
+            console.log('Sesión cerrada al iniciar la app');
+          }
+        } catch (error) {
+          console.log('Error cerrando sesión:', error);
+        }
+      }
+    };
+
+    closeSessionOnStart();
+  }, []);
 
   // Listen to auth state changes
   useEffect(() => {

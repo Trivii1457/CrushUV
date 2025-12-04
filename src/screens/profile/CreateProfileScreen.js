@@ -255,12 +255,12 @@ const CreateProfileScreen = ({navigation}) => {
                   <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => handleDeletePhoto(index)}>
-                    <Icon name="close-circle" size={24} color={colors.error} />
+                    <Text style={styles.deleteEmoji}>❌</Text>
                   </TouchableOpacity>
                 </>
               ) : (
                 <View style={styles.photoPlaceholder}>
-                  <Icon name="add" size={32} color={colors.primary} />
+                  <Text style={styles.addEmoji}>➕</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -415,6 +415,12 @@ const styles = StyleSheet.create({
     right: 4,
     backgroundColor: colors.white,
     borderRadius: 12,
+  },
+  deleteEmoji: {
+    fontSize: 20,
+  },
+  addEmoji: {
+    fontSize: 28,
   },
   completeButton: {
     marginTop: spacing.xl,

@@ -109,9 +109,9 @@ const MatchesScreen = ({navigation}) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Matches</Text>
+        <Text style={styles.headerTitle}>💕 Matches</Text>
         <TouchableOpacity>
-          <Icon name="search-outline" size={24} color={colors.text} />
+          <Text style={styles.searchEmoji}>🔍</Text>
         </TouchableOpacity>
       </View>
 
@@ -127,10 +127,10 @@ const MatchesScreen = ({navigation}) => {
         />
       ) : (
         <View style={styles.emptyState}>
-          <Icon name="heart-dislike-outline" size={80} color={colors.textLight} />
+          <Text style={styles.emptyEmoji}>💔</Text>
           <Text style={styles.emptyTitle}>No tienes matches aún</Text>
           <Text style={styles.emptyDescription}>
-            Empieza a deslizar para encontrar a alguien especial
+            Empieza a deslizar para encontrar a alguien especial 💘
           </Text>
         </View>
       )}
@@ -220,6 +220,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.textLight,
     textAlign: 'center',
+  },
+  emptyEmoji: {
+    fontSize: 80,
+  },
+  searchEmoji: {
+    fontSize: 24,
   },
   loadingContainer: {
     flex: 1,

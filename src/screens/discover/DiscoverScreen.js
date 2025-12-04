@@ -191,10 +191,10 @@ const DiscoverScreen = () => {
     return (
       <View style={styles.container}>
         <View style={styles.emptyState}>
-          <Icon name="people-outline" size={80} color={colors.textLight} />
+          <Text style={styles.emptyEmoji}>😴</Text>
           <Text style={styles.emptyTitle}>¡No hay más perfiles!</Text>
           <Text style={styles.emptyDescription}>
-            Vuelve más tarde para descubrir nuevas personas
+            Vuelve más tarde para descubrir nuevas personas 💫
           </Text>
         </View>
       </View>
@@ -204,10 +204,10 @@ const DiscoverScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Icon name="flame" size={32} color={colors.primary} />
+        <Text style={styles.logoEmoji}>🔥</Text>
         <Text style={styles.headerTitle}>CrushUV</Text>
         <TouchableOpacity style={styles.filterButton}>
-          <Icon name="options-outline" size={24} color={colors.text} />
+          <Text style={styles.filterEmoji}>⚙️</Text>
         </TouchableOpacity>
       </View>
 
@@ -252,19 +252,19 @@ const DiscoverScreen = () => {
         <TouchableOpacity
           style={[styles.actionButton, styles.nopeButton]}
           onPress={handleSwipeLeft}>
-          <Icon name="close" size={32} color={colors.error} />
+          <Text style={styles.actionEmoji}>❌</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.actionButton, styles.superLikeButton]}
           onPress={handleSuperLike}>
-          <Icon name="star" size={24} color={colors.warning} />
+          <Text style={styles.superLikeEmoji}>⭐</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.actionButton, styles.likeButton]}
           onPress={handleSwipeRight}>
-          <Icon name="heart" size={32} color={colors.success} />
+          <Text style={styles.actionEmoji}>💚</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -289,8 +289,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.textDark,
   },
+  logoEmoji: {
+    fontSize: 28,
+  },
   filterButton: {
     padding: spacing.xs,
+  },
+  filterEmoji: {
+    fontSize: 24,
   },
   cardContainer: {
     flex: 1,
@@ -361,6 +367,12 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.success,
   },
+  actionEmoji: {
+    fontSize: 28,
+  },
+  superLikeEmoji: {
+    fontSize: 22,
+  },
   emptyState: {
     flex: 1,
     alignItems: 'center',
@@ -388,6 +400,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: 16,
     color: colors.textLight,
+  },
+  emptyEmoji: {
+    fontSize: 80,
   },
 });
 

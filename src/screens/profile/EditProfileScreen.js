@@ -11,7 +11,6 @@ import {
   Platform,
   PermissionsAndroid,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import {colors, spacing, borderRadius, fontSize, fontWeight, shadows} from '../../theme';
@@ -198,7 +197,7 @@ const EditProfileScreen = ({navigation}) => {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={colors.text} />
+          <Text style={styles.backEmoji}>⬅️</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Editar Perfil</Text>
         <View style={styles.placeholder} />
@@ -222,14 +221,14 @@ const EditProfileScreen = ({navigation}) => {
                   <TouchableOpacity
                     style={styles.removeButton}
                     onPress={() => handleRemovePhoto(index)}>
-                    <Icon name="close-circle" size={24} color={colors.error} />
+                    <Text style={styles.removeEmoji}>❌</Text>
                   </TouchableOpacity>
                 </>
               ) : (
                 <TouchableOpacity
                   style={styles.photoPlaceholder}
                   onPress={() => handleAddPhoto(index)}>
-                  <Icon name="add" size={32} color={colors.primary} />
+                  <Text style={styles.addEmoji}>➕</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -273,12 +272,7 @@ const EditProfileScreen = ({navigation}) => {
                 onPress={() =>
                   setInterests(interests.filter((_, i) => i !== index))
                 }>
-                <Icon
-                  name="close-circle"
-                  size={20}
-                  color={colors.primary}
-                  style={styles.removeInterest}
-                />
+                <Text style={styles.removeInterest}>❌</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -296,7 +290,7 @@ const EditProfileScreen = ({navigation}) => {
                 'plain-text'
               );
             }}>
-            <Icon name="add" size={20} color={colors.primary} />
+            <Text style={styles.addEmoji}>➕</Text>
             <Text style={styles.addInterestText}>Añadir interés</Text>
           </TouchableOpacity>
         </View>
@@ -329,6 +323,9 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: spacing.xs,
+  },
+  backEmoji: {
+    fontSize: 24,
   },
   title: {
     fontSize: fontSize.lg,
@@ -411,6 +408,7 @@ const styles = StyleSheet.create({
   },
   removeInterest: {
     marginLeft: spacing.xs,
+    fontSize: 14,
   },
   addInterestButton: {
     flexDirection: 'row',
@@ -438,6 +436,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.white,
+  },
+  removeEmoji: {
+    fontSize: 18,
+  },
+  addEmoji: {
+    fontSize: 22,
   },
 });
 

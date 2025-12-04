@@ -174,7 +174,7 @@ const ChatDetailScreen = ({route, navigation}) => {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={colors.text} />
+          <Text style={styles.headerEmoji}>⬅️</Text>
         </TouchableOpacity>
         <View style={styles.avatarContainer}>
           <Image source={{uri: otherUserPhoto}} style={styles.headerAvatar} />
@@ -187,10 +187,10 @@ const ChatDetailScreen = ({route, navigation}) => {
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.headerButton}>
-            <Icon name="videocam-outline" size={24} color={colors.text} />
+            <Text style={styles.headerEmoji}>📹</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton}>
-            <Icon name="ellipsis-vertical" size={24} color={colors.text} />
+            <Text style={styles.headerEmoji}>⋮</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -222,7 +222,7 @@ const ChatDetailScreen = ({route, navigation}) => {
 
       <View style={styles.inputContainer}>
         <TouchableOpacity style={styles.attachButton}>
-          <Icon name="add-circle-outline" size={28} color={colors.primary} />
+          <Text style={styles.attachEmoji}>➕</Text>
         </TouchableOpacity>
         <TextInput
           style={styles.input}
@@ -233,7 +233,7 @@ const ChatDetailScreen = ({route, navigation}) => {
           multiline
         />
         <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-          <Icon name="send" size={24} color={colors.white} />
+          <Text style={styles.sendEmoji}>📤</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -407,6 +407,15 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: borderRadius.md,
     marginBottom: spacing.xs,
+  },
+  headerEmoji: {
+    fontSize: 22,
+  },
+  attachEmoji: {
+    fontSize: 26,
+  },
+  sendEmoji: {
+    fontSize: 20,
   },
 });
 

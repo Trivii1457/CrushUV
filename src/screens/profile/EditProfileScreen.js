@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   Platform,
   PermissionsAndroid,
+  Modal,
+  TextInput,
 } from 'react-native';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
@@ -25,6 +27,8 @@ const EditProfileScreen = ({navigation}) => {
   const [career, setCareer] = useState('');
   const [semester, setSemester] = useState('');
   const [interests, setInterests] = useState([]);
+  const [newInterest, setNewInterest] = useState('');
+  const [showInterestModal, setShowInterestModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [uploadingIndex, setUploadingIndex] = useState(null);
@@ -266,30 +270,32 @@ const EditProfileScreen = ({navigation}) => {
         <Text style={styles.sectionTitle}>Intereses</Text>
         <View style={styles.interestsContainer}>
           {interests.map((interest, index) => (
-            <View key={index} style={styles.interestTag}>
+            <TouchableOpacity
+              key={index}
+              style={styles.interestTag}
+              onPress={() => {
+                Alert.alert(
+                  'Eliminar interés',
+                  `¿Quieres eliminar "${interest}"?`,
+                  [
+                    {text: 'Cancelar', style: 'cancel'},
+                    {
+                      text: 'Eliminar',
+                      style: 'destructive',
+                      onPress: () => {
+                        setInterests(interests.filter((_, i) => i !== index));
+                      },
+                    },
+                  ],
+                );
+              }}>
               <Text style={styles.interestText}>{interest}</Text>
-              <TouchableOpacity
-                onPress={() =>
-                  setInterests(interests.filter((_, i) => i !== index))
-                }>
-                <Text style={styles.removeInterest}>❌</Text>
-              </TouchableOpacity>
-            </View>
+              <Text style={styles.interestDeleteIcon}>✕</Text>
+            </TouchableOpacity>
           ))}
           <TouchableOpacity
             style={styles.addInterestButton}
-            onPress={() => {
-              Alert.prompt(
-                'Añadir interés',
-                'Escribe un interés',
-                (text) => {
-                  if (text && text.trim()) {
-                    setInterests([...interests, text.trim()]);
-                  }
-                },
-                'plain-text'
-              );
-            }}>
+            onPress={() => setShowInterestModal(true)}>
             <Text style={styles.addEmoji}>➕</Text>
             <Text style={styles.addInterestText}>Añadir interés</Text>
           </TouchableOpacity>
@@ -301,6 +307,57 @@ const EditProfileScreen = ({navigation}) => {
           loading={loading}
           style={styles.saveButton}
         />
+
+        {/* Modal para añadir interés */}
+        <Modal
+          visible={showInterestModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowInterestModal(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Añadir interés</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={newInterest}
+                onChangeText={setNewInterest}
+                placeholder="Ej: Música, Deportes, Películas..."
+                placeholderTextColor={colors.textMuted}
+                autoFocus
+                maxLength={30}
+              />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalCancelButton]}
+                  onPress={() => {
+                    setNewInterest('');
+                    setShowInterestModal(false);
+                  }}>
+                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.modalAddButton]}
+                  onPress={() => {
+                    if (newInterest.trim()) {
+                      if (interests.length >= 10) {
+                        Alert.alert('Límite', 'Máximo 10 intereses');
+                        return;
+                      }
+                      if (interests.includes(newInterest.trim())) {
+                        Alert.alert('Duplicado', 'Este interés ya existe');
+                        return;
+                      }
+                      setInterests([...interests, newInterest.trim()]);
+                      setNewInterest('');
+                      setShowInterestModal(false);
+                    }
+                  }}>
+                  <Text style={styles.modalAddText}>Añadir</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </View>
   );
@@ -392,23 +449,22 @@ const styles = StyleSheet.create({
   interestTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.primary + '20',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.xl,
+    borderRadius: 20,
     marginRight: spacing.sm,
     marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.primary,
   },
   interestText: {
     fontSize: fontSize.sm,
     color: colors.primary,
     fontWeight: fontWeight.medium,
   },
-  removeInterest: {
+  interestDeleteIcon: {
     marginLeft: spacing.xs,
-    fontSize: 14,
+    color: colors.primary,
+    fontSize: 12,
   },
   addInterestButton: {
     flexDirection: 'row',
@@ -416,16 +472,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.xl,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.border,
     borderStyle: 'dashed',
+    marginBottom: spacing.sm,
   },
   addInterestText: {
     fontSize: fontSize.sm,
-    color: colors.primary,
+    color: colors.textLight,
     marginLeft: spacing.xs,
-    fontWeight: fontWeight.medium,
   },
   saveButton: {
     marginTop: spacing.xl,
@@ -442,6 +498,64 @@ const styles = StyleSheet.create({
   },
   addEmoji: {
     fontSize: 22,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    width: '100%',
+    maxWidth: 340,
+    ...shadows.lg,
+  },
+  modalTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.bold,
+    color: colors.textDark,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: fontSize.md,
+    color: colors.textDark,
+    marginBottom: spacing.lg,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+  },
+  modalCancelButton: {
+    marginRight: spacing.sm,
+    backgroundColor: colors.surface,
+  },
+  modalCancelText: {
+    color: colors.textLight,
+    fontWeight: fontWeight.medium,
+  },
+  modalAddButton: {
+    marginLeft: spacing.sm,
+    backgroundColor: colors.primary,
+  },
+  modalAddText: {
+    color: colors.white,
+    fontWeight: fontWeight.bold,
   },
 });
 

@@ -130,7 +130,7 @@ const SettingsScreen = ({navigation}) => {
             icon="key-outline"
             title="Cambiar Contraseña"
             subtitle="Actualiza tu contraseña"
-            onPress={() => {}}
+            onPress={() => navigation.navigate('ChangePassword')}
           />
           <SettingItem
             icon="shield-checkmark-outline"

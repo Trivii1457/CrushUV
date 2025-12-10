@@ -18,6 +18,7 @@ import ProfileScreen from '../screens/profile/ProfileScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import CreateProfileScreen from '../screens/profile/CreateProfileScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import ChangePasswordScreen from '../screens/settings/ChangePasswordScreen';
 
 import {colors} from '../theme';
 import {useAuth} from '../context/AuthContext';
@@ -104,6 +105,7 @@ const AppNavigator = () => {
           <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
         </>
       )}
     </Stack.Navigator>

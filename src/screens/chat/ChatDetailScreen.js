@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {colors, spacing, borderRadius, fontSize, fontWeight} from '../../theme';
@@ -186,7 +187,15 @@ const ChatDetailScreen = ({route, navigation}) => {
           </Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.headerButton}>
+          <TouchableOpacity 
+            style={styles.headerButton}
+            onPress={() => {
+              Alert.alert(
+                '📹 Videollamada',
+                'Esta función estará disponible próximamente. ¡Estamos trabajando en ello!',
+                [{text: 'Entendido'}]
+              );
+            }}>
             <Text style={styles.headerEmoji}>📹</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton}>

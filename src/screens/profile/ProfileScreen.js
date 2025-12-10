@@ -33,6 +33,11 @@ const ProfileScreen = ({navigation}) => {
         // Load local photos
         const localPhotos = await profileService.getLocalPhotos();
         const validPhotos = localPhotos.filter(p => p !== null);
+        console.log('ProfileScreen - Fotos cargadas:', {
+          total: localPhotos.length,
+          validas: validPhotos.length,
+          paths: validPhotos,
+        });
         setPhotos(validPhotos);
 
         // Load matches count
@@ -72,10 +77,17 @@ const ProfileScreen = ({navigation}) => {
 
   const getPhotoUri = (photo) => {
     if (!photo) {return 'https://via.placeholder.com/400x500/CCCCCC/FFFFFF?text=Sin+foto';}
-    if (photo.startsWith('/') || photo.startsWith('file://')) {
-      return `file://${photo.replace('file://', '')}`;
+    if (typeof photo === 'string') {
+      // If it's a file path, ensure it has file:// prefix
+      if (photo.startsWith('/')) {
+        return `file://${photo}`;
+      } else if (photo.startsWith('file://')) {
+        return photo;
+      }
+      // If it's a URL, return as is
+      return photo;
     }
-    return photo;
+    return 'https://via.placeholder.com/400x500/CCCCCC/FFFFFF?text=Sin+foto';
   };
 
   if (loading) {
@@ -320,12 +332,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginBottom: spacing.lg,
   },
   gridPhoto: {
     width: '31%',
     aspectRatio: 0.75,
     marginBottom: spacing.sm,
     borderRadius: borderRadius.md,
+    backgroundColor: colors.surface,
     ...shadows.sm,
   },
   loadingContainer: {
